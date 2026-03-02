@@ -231,7 +231,8 @@ class _HomePageState extends State<HomePage> {
         headers: {"Content-Type": "application/json"},
         body: jsonEncode(body),
       );
-      if (response.statusCode == 200) {
+      // Google Apps Script returns 302 redirect on success, accept both 200 and 302
+      if (response.statusCode == 200 || response.statusCode == 302) {
         loadData();
         showMessage('Transaction added successfully');
       } else {
