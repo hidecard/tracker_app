@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -39,6 +40,7 @@ class _HomePageState extends State<HomePage> {
       "https://script.google.com/macros/s/AKfycbx2grg3odTkT7KlCvjiUzCH80jXLsrZX2gnFDCntu2FQpW5ko4urwJkn8fd81cBOOKmpA/exec";
 
   List data = [];
+  List cachedData = [];
   String selectedMonth = DateTime.now().month.toString();
   String selectedYear = DateTime.now().year.toString();
 
@@ -46,7 +48,10 @@ class _HomePageState extends State<HomePage> {
   double totalExpense = 0;
 
   bool isLoading = false;
+  bool isFirstLoad = true;
+  bool isRefreshing = false;
   String? error;
+  Timer? _autoRefreshTimer;
 
   final List<String> monthNames = [
     'January',
@@ -71,13 +76,111 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     loadData();
+    _startAutoRefresh();
+  }
+
+  @override
+  void dispose() {
+    _autoRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startAutoRefresh() {
+    _autoRefreshTimer = Timer.periodic(const Duration(seconds: 30), (timer) {
+      _refreshDataInBackground();
+    });
+  }
+
+  Future<void> _refreshDataInBackground() async {
+    if (!mounted) return;
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+      );
+      if (response.statusCode == 200 && mounted) {
+        List newData = jsonDecode(response.body);
+        newData.sort((a, b) {
+          try {
+            return b['date'].toString().compareTo(a['date'].toString());
+          } catch (_) {
+            return 0;
+          }
+        });
+        setState(() {
+          data = newData;
+          cachedData = List.from(newData);
+          error = null;
+        });
+        calculateTotals();
+      }
+    } catch (e) {
+      // Silently fail for background refresh
+    }
   }
 
   Future<void> loadData() async {
     if (!mounted) return;
+
+    // If we have cached data, show it immediately while fetching new data
+    if (cachedData.isNotEmpty) {
+      data = List.from(cachedData);
+      calculateTotals();
+      setState(() {
+        isLoading = false;
+      });
+    } else {
+      // First load - show loading indicator
+      setState(() {
+        isLoading = true;
+        error = null;
+      });
+    }
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+      );
+      if (response.statusCode == 200) {
+        List newData = jsonDecode(response.body);
+        newData.sort((a, b) {
+          try {
+            return b['date'].toString().compareTo(a['date'].toString());
+          } catch (_) {
+            return 0;
+          }
+        });
+        if (!mounted) return;
+        setState(() {
+          data = newData;
+          cachedData = List.from(newData);
+          isFirstLoad = false;
+          error = null;
+        });
+        calculateTotals();
+      } else {
+        if (!mounted) return;
+        setState(() {
+          error = 'Server returned ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        error = 'Failed to fetch data';
+      });
+    }
+    if (!mounted) return;
     setState(() {
-      isLoading = true;
-      error = null;
+      isLoading = false;
+    });
+  }
+
+  Future<void> _pullToRefresh() async {
+    if (!mounted) return;
+    setState(() {
+      isRefreshing = true;
     });
     try {
       final response = await http.get(
@@ -85,24 +188,28 @@ class _HomePageState extends State<HomePage> {
         headers: {"Content-Type": "application/json"},
       );
       if (response.statusCode == 200) {
-        data = jsonDecode(response.body);
-        data.sort((a, b) {
+        List newData = jsonDecode(response.body);
+        newData.sort((a, b) {
           try {
             return b['date'].toString().compareTo(a['date'].toString());
           } catch (_) {
             return 0;
           }
         });
+        if (!mounted) return;
+        setState(() {
+          data = newData;
+          cachedData = List.from(newData);
+          error = null;
+        });
         calculateTotals();
-      } else {
-        error = 'Server returned ${response.statusCode}';
       }
     } catch (e) {
-      error = 'Failed to fetch data';
+      // Keep showing old data on error
     }
     if (!mounted) return;
     setState(() {
-      isLoading = false;
+      isRefreshing = false;
     });
   }
 
@@ -881,6 +988,24 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
+                            // Refresh button
+                            IconButton(
+                              onPressed: () => _pullToRefresh(),
+                              icon: isRefreshing
+                                  ? const SizedBox(
+                                      width: 20,
+                                      height: 20,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        color: Color(0xFF0077B6),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.refresh,
+                                      color: Color(0xFF0077B6),
+                                    ),
+                              tooltip: 'Refresh',
+                            ),
                           ],
                         ),
                         const SizedBox(height: 12),
@@ -1086,7 +1211,7 @@ class _HomePageState extends State<HomePage> {
                           color: Color(0xFF87CEEB),
                         ),
                       )
-                    : error != null
+                    : error != null && data.isEmpty
                     ? Center(
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -1109,100 +1234,104 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                       )
-                    : ListView.builder(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        itemCount: data.length,
-                        itemBuilder: (context, index) {
-                          var item = data[index];
-                          String typeVal = item['type']?.toString() ?? '';
-                          bool isIncome = typeVal == 'income';
-                          String categoryText =
-                              item['category']?.toString() ?? '';
-                          String dateText = item['date']?.toString() ?? '';
-                          double amountValue =
-                              double.tryParse(
-                                item['amount']?.toString() ?? '0',
-                              ) ??
-                              0;
-                          String noteText = item['note']?.toString() ?? '';
+                    : RefreshIndicator(
+                        onRefresh: _pullToRefresh,
+                        color: const Color(0xFF87CEEB),
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemCount: data.length,
+                          itemBuilder: (context, index) {
+                            var item = data[index];
+                            String typeVal = item['type']?.toString() ?? '';
+                            bool isIncome = typeVal == 'income';
+                            String categoryText =
+                                item['category']?.toString() ?? '';
+                            String dateText = item['date']?.toString() ?? '';
+                            double amountValue =
+                                double.tryParse(
+                                  item['amount']?.toString() ?? '0',
+                                ) ??
+                                0;
+                            String noteText = item['note']?.toString() ?? '';
 
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _buildGlassCard(
-                              padding: EdgeInsets.zero,
-                              child: InkWell(
-                                onTap: () => showTransactionDetail(item),
-                                borderRadius: BorderRadius.circular(16),
-                                child: Padding(
-                                  padding: const EdgeInsets.all(12),
-                                  child: Row(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(10),
-                                        decoration: BoxDecoration(
-                                          color: isIncome
-                                              ? Colors.green[50]
-                                              : Colors.red[50],
-                                          borderRadius: BorderRadius.circular(
-                                            12,
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 8),
+                              child: _buildGlassCard(
+                                padding: EdgeInsets.zero,
+                                child: InkWell(
+                                  onTap: () => showTransactionDetail(item),
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: isIncome
+                                                ? Colors.green[50]
+                                                : Colors.red[50],
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            isIncome
+                                                ? Icons.arrow_downward
+                                                : Icons.arrow_upward,
+                                            color: isIncome
+                                                ? Colors.green[700]
+                                                : Colors.red[700],
+                                            size: 20,
                                           ),
                                         ),
-                                        child: Icon(
-                                          isIncome
-                                              ? Icons.arrow_downward
-                                              : Icons.arrow_upward,
-                                          color: isIncome
-                                              ? Colors.green[700]
-                                              : Colors.red[700],
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              categoryText,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.w600,
-                                                color: Color(0xFF0077B6),
-                                                fontSize: 14,
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                categoryText,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Color(0xFF0077B6),
+                                                  fontSize: 14,
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 2),
-                                            Text(
-                                              noteText.isEmpty
-                                                  ? dateText
-                                                  : '$dateText • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}',
-                                              style: TextStyle(
-                                                color: Colors.grey[600],
-                                                fontSize: 12,
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                noteText.isEmpty
+                                                    ? dateText
+                                                    : '$dateText • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}',
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 12,
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                               ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                      Text(
-                                        '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-                                        style: TextStyle(
-                                          color: isIncome
-                                              ? Colors.green[700]
-                                              : Colors.red[700],
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                        Text(
+                                          '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+                                          style: TextStyle(
+                                            color: isIncome
+                                                ? Colors.green[700]
+                                                : Colors.red[700],
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        },
+                            );
+                          },
+                        ),
                       ),
               ),
             ],
