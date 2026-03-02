@@ -128,8 +128,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildGlassCard({required Widget child, EdgeInsets? padding}) {
+  Widget _buildGlassCard({
+    required Widget child,
+    EdgeInsets? padding,
+    double? width,
+  }) {
     return Container(
+      width: width,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         color: Colors.white.withOpacity(0.3),
@@ -146,27 +151,34 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildStatCard(String label, double value, Color color) {
+  Widget _buildStatCard(
+    String label,
+    double value,
+    Color color,
+    IconData icon,
+  ) {
     return Expanded(
       child: _buildGlassCard(
         padding: const EdgeInsets.all(12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontWeight: FontWeight.w500,
                 color: Colors.grey[700],
-                fontSize: 12,
+                fontSize: 11,
               ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               formatMMK(value),
               style: TextStyle(
                 color: color,
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -224,7 +236,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> deleteTransaction(String id) async {
-    // Show confirmation dialog
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -247,6 +258,158 @@ class _HomePageState extends State<HomePage> {
               showMessage('Deleted');
             },
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show transaction detail dialog
+  void showTransactionDetail(Map item) {
+    String typeVal = item['type']?.toString() ?? '';
+    bool isIncome = typeVal == 'income';
+    String categoryText = item['category']?.toString() ?? '';
+    String dateText = item['date']?.toString() ?? '';
+    String noteText = item['note']?.toString() ?? '';
+    double amountValue =
+        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) => Container(
+        margin: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(top: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Category Icon
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isIncome ? Colors.green[50] : Colors.red[50],
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isIncome ? Icons.arrow_downward : Icons.arrow_upward,
+                color: isIncome ? Colors.green[700] : Colors.red[700],
+                size: 32,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              categoryText,
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0077B6),
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: isIncome ? Colors.green[700] : Colors.red[700],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // Details
+            _buildDetailRow(Icons.calendar_today, 'Date', dateText),
+            _buildDetailRow(Icons.category, 'Category', categoryText),
+            _buildDetailRow(
+              Icons.attach_money,
+              'Type',
+              isIncome ? 'Income' : 'Expense',
+            ),
+            _buildDetailRow(
+              Icons.note,
+              'Note',
+              noteText.isEmpty ? 'No note' : noteText,
+            ),
+            const SizedBox(height: 20),
+            // Action Buttons
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF87CEEB),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showDialogForm(item: item);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Delete'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        deleteTransaction(item['id']?.toString() ?? '');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: const Color(0xFF87CEEB)),
+          const SizedBox(width: 12),
+          Text(label, style: TextStyle(color: Colors.grey[600])),
+          const Spacer(),
+          Text(
+            value,
+            style: const TextStyle(
+              fontWeight: FontWeight.w500,
+              color: Color(0xFF0077B6),
+            ),
           ),
         ],
       ),
@@ -587,14 +750,25 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildStatCard('Income', totalIncome, Colors.green[700]!),
+                    _buildStatCard(
+                      'Income',
+                      totalIncome,
+                      Colors.green[700]!,
+                      Icons.arrow_downward,
+                    ),
                     const SizedBox(width: 8),
-                    _buildStatCard('Expense', totalExpense, Colors.red[700]!),
+                    _buildStatCard(
+                      'Expense',
+                      totalExpense,
+                      Colors.red[700]!,
+                      Icons.arrow_upward,
+                    ),
                     const SizedBox(width: 8),
                     _buildStatCard(
                       'Balance',
                       balance,
                       balance >= 0 ? Colors.green[700]! : Colors.red[700]!,
+                      Icons.account_balance,
                     ),
                   ],
                 ),
@@ -723,87 +897,83 @@ class _HomePageState extends State<HomePage> {
                                 item['amount']?.toString() ?? '0',
                               ) ??
                               0;
-                          String itemId = item['id']?.toString() ?? '';
+                          String noteText = item['note']?.toString() ?? '';
 
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: _buildGlassCard(
                               padding: EdgeInsets.zero,
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 4,
-                                ),
-                                leading: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: isIncome
-                                        ? Colors.green.withOpacity(0.2)
-                                        : Colors.red.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    isIncome
-                                        ? Icons.arrow_downward
-                                        : Icons.arrow_upward,
-                                    color: isIncome
-                                        ? Colors.green[700]
-                                        : Colors.red[700],
-                                    size: 20,
-                                  ),
-                                ),
-                                title: Text(
-                                  categoryText,
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: Color(0xFF0077B6),
-                                    fontSize: 14,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  dateText,
-                                  style: TextStyle(
-                                    color: Colors.grey[600],
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                trailing: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-                                      style: TextStyle(
-                                        color: isIncome
-                                            ? Colors.green[700]
-                                            : Colors.red[700],
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 13,
+                              child: InkWell(
+                                onTap: () => showTransactionDetail(item),
+                                borderRadius: BorderRadius.circular(16),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    children: [
+                                      // Icon
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: isIncome
+                                              ? Colors.green[50]
+                                              : Colors.red[50],
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          isIncome
+                                              ? Icons.arrow_downward
+                                              : Icons.arrow_upward,
+                                          color: isIncome
+                                              ? Colors.green[700]
+                                              : Colors.red[700],
+                                          size: 20,
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 4),
-                                    // Edit Button
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.edit,
-                                        color: Color(0xFF0077B6),
-                                        size: 20,
+                                      const SizedBox(width: 12),
+                                      // Info
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              categoryText,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                color: Color(0xFF0077B6),
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 2),
+                                            Text(
+                                              noteText.isEmpty
+                                                  ? dateText
+                                                  : '$dateText • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}',
+                                              style: TextStyle(
+                                                color: Colors.grey[600],
+                                                fontSize: 12,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                      onPressed: () {
-                                        showDialogForm(item: item);
-                                      },
-                                    ),
-                                    // Delete Button
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: Colors.red,
-                                        size: 20,
+                                      // Amount
+                                      Text(
+                                        '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+                                        style: TextStyle(
+                                          color: isIncome
+                                              ? Colors.green[700]
+                                              : Colors.red[700],
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
                                       ),
-                                      onPressed: () {
-                                        deleteTransaction(itemId);
-                                      },
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                             ),
