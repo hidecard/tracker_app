@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
@@ -21,6 +22,39 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF87CEEB),
           brightness: Brightness.light,
+        ),
+        appBarTheme: AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          centerTitle: true,
+          titleTextStyle: const TextStyle(
+            color: Color(0xFF0077B6),
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        floatingActionButtonTheme: FloatingActionButtonThemeData(
+          backgroundColor: const Color(0xFF87CEEB),
+          elevation: 8,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor: Colors.white.withOpacity(0.3),
+          elevation: 0,
+          selectedItemColor: const Color(0xFF0077B6),
+          unselectedItemColor: Colors.grey[600],
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+        ),
+        textTheme: const TextTheme(
+          titleLarge: TextStyle(
+            color: Color(0xFF0077B6),
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+          bodyMedium: TextStyle(color: Color(0xFF333333), fontSize: 14),
         ),
       ),
       home: const MainScreen(),
@@ -94,10 +128,7 @@ class MainScreenState extends State<MainScreen> {
               ),
             ),
             child: BackdropFilter(
-              filter: ColorFilter.mode(
-                Colors.white.withOpacity(0.1),
-                BlendMode.srcOver,
-              ),
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                 child: Row(
@@ -139,8 +170,17 @@ class MainScreenState extends State<MainScreen> {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: isSelected
-              ? const Color(0xFF87CEEB).withOpacity(0.4)
+              ? const Color(0xFF87CEEB).withOpacity(0.2)
               : Colors.transparent,
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF87CEEB).withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
           border: isSelected
               ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
               : null,
@@ -151,7 +191,7 @@ class MainScreenState extends State<MainScreen> {
             Icon(
               isSelected ? activeIcon : icon,
               color: isSelected ? const Color(0xFF0077B6) : Colors.grey[600],
-              size: 24,
+              size: isSelected ? 28 : 24,
             ),
             if (isSelected) ...[
               const SizedBox(width: 8),
@@ -174,20 +214,26 @@ class MainScreenState extends State<MainScreen> {
     return GestureDetector(
       onTap: _showAddFormFromNav,
       child: Container(
-        width: 56,
-        height: 56,
+        width: 60,
+        height: 60,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFF87CEEB),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+          ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF87CEEB).withOpacity(0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: const Color(0xFF0077B6).withOpacity(0.4),
+              blurRadius: 16,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
-        child: const Icon(Icons.add, color: Colors.white, size: 28),
+        child: const Center(
+          child: Icon(Icons.add, color: Colors.white, size: 32),
+        ),
       ),
     );
   }
@@ -1060,8 +1106,19 @@ class _HomeTabState extends State<HomeTab> {
     );
 
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0),
+      extendBodyBehindAppBar: false,
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
+          ),
+        ),
+        title: const Text('Dashboard'),
+      ),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -1095,14 +1152,27 @@ class _HomeTabState extends State<HomeTab> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                "Money Tracker",
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF0077B6),
-                                ),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    "Current Balance",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF0077B6),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    formatMMK(balance),
+                                    style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF0077B6),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                             IconButton(
@@ -2158,11 +2228,18 @@ class TransactionsTabState extends State<TransactionsTab> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        flexibleSpace: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
+          ),
+        ),
         title: const Text(
           'All Transactions',
-          style: TextStyle(color: Color(0xFF0077B6)),
+          style: TextStyle(color: Colors.white),
         ),
       ),
       extendBody: true,
