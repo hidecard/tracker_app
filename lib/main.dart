@@ -5,8 +5,50 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 
+class AppLocalizations {
+  // Simple single-language translation helper (English only).
+  static String t(String key) => _values[key] ?? key;
+
+  static const Map<String, String> _values = {
+    'dashboard': 'Dashboard',
+    'current_balance': 'Current Balance',
+    'all_transactions': 'All Transactions',
+    'add_transaction': 'Add Transaction',
+    'home': 'Home',
+    'transactions': 'Transactions',
+    'balance': 'Balance',
+    'month_prefix': 'Month ',
+    'failed_to_add_transaction': 'Failed to add transaction',
+    'failed_to_fetch_data': 'Failed to fetch data',
+    'error': 'Error:',
+    'income': 'Income',
+    'expense': 'Expense',
+    'amount_mmk': 'Amount (MMK)',
+    'note': 'Note',
+    'cancel': 'Cancel',
+    'add': 'Add',
+    'update': 'Update',
+    'delete': 'Delete',
+    'please_enter_amount': 'Please enter amount',
+    'transaction_added': 'Transaction added successfully',
+    'transaction_deleted': 'Transaction deleted successfully',
+    'transaction_updated': 'Transaction updated successfully',
+    'edit_transaction': 'Edit Transaction',
+    'delete_transaction': 'Delete Transaction',
+    'delete_confirmation': 'Are you sure you want to delete this transaction?',
+    'date': 'Date',
+    'category': 'Category',
+    'type': 'Type',
+    'no_note': 'No note',
+    'edit': 'Edit',
+    'language': 'Language',
+    'english': 'English',
+    'myanmar': 'မြန်မာ',
+  };
+}
+
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -134,12 +176,12 @@ class MainScreenState extends State<MainScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
+                    _buildNavItem(0, Icons.home_outlined, Icons.home, 'home'),
                     _buildNavItem(
                       1,
                       Icons.receipt_long_outlined,
                       Icons.receipt_long,
-                      'Transactions',
+                      'transactions',
                     ),
                     _buildCenterAddButton(context),
                   ],
@@ -156,9 +198,10 @@ class MainScreenState extends State<MainScreen> {
     int index,
     IconData icon,
     IconData activeIcon,
-    String label,
+    String labelKey,
   ) {
     bool isSelected = _currentIndex == index;
+    final label = AppLocalizations.t(labelKey);
     return GestureDetector(
       onTap: () => setCurrentIndex(index),
       child: AnimatedContainer(
@@ -313,7 +356,7 @@ class _HomeTabState extends State<HomeTab> {
       );
       if (response.statusCode == 200) {
         loadData();
-        showMessage('Transaction deleted successfully');
+        showMessage(AppLocalizations.t('transaction_deleted'));
       }
     } catch (_) {}
   }
@@ -328,7 +371,7 @@ class _HomeTabState extends State<HomeTab> {
       );
       if (response.statusCode == 200) {
         loadData();
-        showMessage('Transaction updated successfully');
+        showMessage(AppLocalizations.t('transaction_updated'));
       }
     } catch (_) {}
   }
@@ -344,12 +387,18 @@ class _HomeTabState extends State<HomeTab> {
       );
       if (response.statusCode == 200 || response.statusCode == 302) {
         loadData();
-        showMessage('Transaction added successfully');
+        showMessage(AppLocalizations.t('transaction_added'));
       } else {
-        showMessage('Failed to add transaction', isError: true);
+        showMessage(
+          AppLocalizations.t('failed_to_add_transaction'),
+          isError: true,
+        );
       }
     } catch (e) {
-      showMessage('Error: ${e.toString()}', isError: true);
+      showMessage(
+        '${AppLocalizations.t('error')} ${e.toString()}',
+        isError: true,
+      );
     }
   }
 
@@ -417,17 +466,27 @@ class _HomeTabState extends State<HomeTab> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildDetailRow(Icons.calendar_today, 'Date', dateText),
-            _buildDetailRow(Icons.category, 'Category', categoryText),
+            _buildDetailRow(
+              Icons.calendar_today,
+              AppLocalizations.t('date'),
+              dateText,
+            ),
+            _buildDetailRow(
+              Icons.category,
+              AppLocalizations.t('category'),
+              categoryText,
+            ),
             _buildDetailRow(
               Icons.attach_money,
-              'Type',
-              isIncome ? 'Income' : 'Expense',
+              AppLocalizations.t('type'),
+              isIncome
+                  ? AppLocalizations.t('income')
+                  : AppLocalizations.t('expense'),
             ),
             _buildDetailRow(
               Icons.note,
-              'Note',
-              noteText.isEmpty ? 'No note' : noteText,
+              AppLocalizations.t('note'),
+              noteText.isEmpty ? AppLocalizations.t('no_note') : noteText,
             ),
             const SizedBox(height: 20),
             Padding(
@@ -670,7 +729,10 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           onPressed: () {
                             if (amountController.text.isEmpty) {
-                              showMessage('Please enter amount', isError: true);
+                              showMessage(
+                                AppLocalizations.t('please_enter_amount'),
+                                isError: true,
+                              );
                               return;
                             }
                             Map body = {
@@ -777,7 +839,8 @@ class _HomeTabState extends State<HomeTab> {
         calculateTotals();
       }
     } catch (e) {
-      if (mounted) setState(() => error = 'Failed to fetch data');
+      if (mounted)
+        setState(() => error = AppLocalizations.t('failed_to_fetch_data'));
     }
     if (mounted) setState(() => isLoading = false);
   }
@@ -849,8 +912,8 @@ class _HomeTabState extends State<HomeTab> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    "Add Transaction",
+                  Text(
+                    AppLocalizations.t('add_transaction'),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -974,7 +1037,10 @@ class _HomeTabState extends State<HomeTab> {
                           ),
                           onPressed: () {
                             if (amountController.text.isEmpty) {
-                              showMessage('Please enter amount', isError: true);
+                              showMessage(
+                                AppLocalizations.t('please_enter_amount'),
+                                isError: true,
+                              );
                               return;
                             }
                             Map body = {
@@ -1045,11 +1111,12 @@ class _HomeTabState extends State<HomeTab> {
   }
 
   Widget _buildStatCard(
-    String label,
+    String labelKey,
     double value,
     Color color,
     IconData icon,
   ) {
+    final label = AppLocalizations.t(labelKey);
     return Expanded(
       child: _buildGlassCard(
         padding: const EdgeInsets.all(12),
@@ -1117,7 +1184,7 @@ class _HomeTabState extends State<HomeTab> {
             ),
           ),
         ),
-        title: const Text('Dashboard'),
+        title: Text(AppLocalizations.t('dashboard')),
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -1156,8 +1223,8 @@ class _HomeTabState extends State<HomeTab> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    "Current Balance",
+                                  Text(
+                                    AppLocalizations.t('current_balance'),
                                     style: TextStyle(
                                       fontSize: 12,
                                       color: Color(0xFF0077B6),
@@ -1284,21 +1351,21 @@ class _HomeTabState extends State<HomeTab> {
                 child: Row(
                   children: [
                     _buildStatCard(
-                      'Income',
+                      'income',
                       totalIncome,
                       Colors.green[700]!,
                       Icons.arrow_downward,
                     ),
                     const SizedBox(width: 8),
                     _buildStatCard(
-                      'Expense',
+                      'expense',
                       totalExpense,
                       Colors.red[700]!,
                       Icons.arrow_upward,
                     ),
                     const SizedBox(width: 8),
                     _buildStatCard(
-                      'Balance',
+                      'balance',
                       balance,
                       balance >= 0 ? Colors.green[700]! : Colors.red[700]!,
                       Icons.account_balance,
@@ -1537,7 +1604,7 @@ class TransactionsTabState extends State<TransactionsTab> {
       );
       if (response.statusCode == 200) {
         loadData();
-        showMessage('Transaction deleted successfully');
+        showMessage(AppLocalizations.t('transaction_deleted'));
       }
     } catch (_) {}
   }
@@ -1552,7 +1619,7 @@ class TransactionsTabState extends State<TransactionsTab> {
       );
       if (response.statusCode == 200) {
         loadData();
-        showMessage('Transaction updated successfully');
+        showMessage(AppLocalizations.t('transaction_updated'));
       }
     } catch (_) {}
   }
@@ -1567,7 +1634,7 @@ class TransactionsTabState extends State<TransactionsTab> {
       );
       if (response.statusCode == 200 || response.statusCode == 302) {
         loadData();
-        showMessage('Transaction added successfully');
+        showMessage(AppLocalizations.t('transaction_added'));
       }
     } catch (_) {}
   }
@@ -1636,17 +1703,27 @@ class TransactionsTabState extends State<TransactionsTab> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildDetailRow(Icons.calendar_today, 'Date', dateText),
-            _buildDetailRow(Icons.category, 'Category', categoryText),
+            _buildDetailRow(
+              Icons.calendar_today,
+              AppLocalizations.t('date'),
+              dateText,
+            ),
+            _buildDetailRow(
+              Icons.category,
+              AppLocalizations.t('category'),
+              categoryText,
+            ),
             _buildDetailRow(
               Icons.attach_money,
-              'Type',
-              isIncome ? 'Income' : 'Expense',
+              AppLocalizations.t('type'),
+              isIncome
+                  ? AppLocalizations.t('income')
+                  : AppLocalizations.t('expense'),
             ),
             _buildDetailRow(
               Icons.note,
-              'Note',
-              noteText.isEmpty ? 'No note' : noteText,
+              AppLocalizations.t('note'),
+              noteText.isEmpty ? AppLocalizations.t('no_note') : noteText,
             ),
             const SizedBox(height: 20),
             Padding(
@@ -1889,7 +1966,10 @@ class TransactionsTabState extends State<TransactionsTab> {
                           ),
                           onPressed: () {
                             if (amountController.text.isEmpty) {
-                              showMessage('Please enter amount', isError: true);
+                              showMessage(
+                                AppLocalizations.t('please_enter_amount'),
+                                isError: true,
+                              );
                               return;
                             }
                             Map body = {
@@ -2056,7 +2136,10 @@ class TransactionsTabState extends State<TransactionsTab> {
                           ),
                           onPressed: () {
                             if (amountController.text.isEmpty) {
-                              showMessage('Please enter amount', isError: true);
+                              showMessage(
+                                AppLocalizations.t('please_enter_amount'),
+                                isError: true,
+                              );
                               return;
                             }
                             Map body = {
@@ -2237,9 +2320,9 @@ class TransactionsTabState extends State<TransactionsTab> {
             ),
           ),
         ),
-        title: const Text(
-          'All Transactions',
-          style: TextStyle(color: Colors.white),
+        title: Text(
+          AppLocalizations.t('all_transactions'),
+          style: const TextStyle(color: Colors.white),
         ),
       ),
       extendBody: true,
@@ -2396,8 +2479,8 @@ class TransactionsTabState extends State<TransactionsTab> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    const Text(
-                      'Transactions',
+                    Text(
+                      AppLocalizations.t('transactions'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
