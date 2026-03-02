@@ -35,12 +35,12 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // TODO: replace with your actual Web App URL
   final String url =
       "https://script.google.com/macros/s/AKfycby0elRrVVqSKwHQgJXYx44eP6D0W-BtLypq1zl-ev0rqDUXzqBzkIBN1Wxsi0aVK_9ImA/exec";
 
   List data = [];
   String selectedMonth = DateTime.now().month.toString();
+  String selectedYear = DateTime.now().year.toString();
 
   double totalIncome = 0;
   double totalExpense = 0;
@@ -62,6 +62,10 @@ class _HomePageState extends State<HomePage> {
     'November',
     'December',
   ];
+
+  String formatMMK(double amount) {
+    return '${amount.toStringAsFixed(0)}MMK';
+  }
 
   @override
   void initState() {
@@ -110,7 +114,8 @@ class _HomePageState extends State<HomePage> {
       } catch (_) {
         continue;
       }
-      if (date.month.toString() == selectedMonth) {
+      if (date.month.toString() == selectedMonth &&
+          date.year.toString() == selectedYear) {
         String typeVal = item['type']?.toString() ?? '';
         if (typeVal == 'income') {
           totalIncome +=
@@ -123,51 +128,49 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Widget _buildGlassCard({required Widget child}) {
+  Widget _buildGlassCard({required Widget child, EdgeInsets? padding}) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        color: Colors.white.withOpacity(0.25),
-        border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
+        borderRadius: BorderRadius.circular(16),
+        color: Colors.white.withOpacity(0.3),
+        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF87CEEB).withOpacity(0.15),
-            blurRadius: 20,
-            spreadRadius: 5,
+            color: const Color(0xFF87CEEB).withOpacity(0.1),
+            blurRadius: 10,
+            spreadRadius: 2,
           ),
         ],
       ),
-      child: ClipRRect(borderRadius: BorderRadius.circular(20), child: child),
+      child: ClipRRect(borderRadius: BorderRadius.circular(16), child: child),
     );
   }
 
   Widget _buildStatCard(String label, double value, Color color) {
     return Expanded(
       child: _buildGlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
-                  fontSize: 14,
-                ),
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey[700],
+                fontSize: 12,
               ),
-              const SizedBox(height: 8),
-              Text(
-                value.toStringAsFixed(2),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              formatMMK(value),
+              style: TextStyle(
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -184,7 +187,9 @@ class _HomePageState extends State<HomePage> {
       }
 
       String typeVal = item['type']?.toString() ?? '';
-      if (date.month.toString() == selectedMonth && typeVal == "expense") {
+      if (date.month.toString() == selectedMonth &&
+          date.year.toString() == selectedYear &&
+          typeVal == "expense") {
         String cat = item['category']?.toString() ?? 'Unknown';
         double amt = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
         result[cat] = (result[cat] ?? 0) + amt;
@@ -219,10 +224,33 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> deleteTransaction(String id) async {
-    await http.delete(Uri.parse("$url?id=$id"));
-    if (!mounted) return;
-    loadData();
-    showMessage('Deleted');
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Transaction'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              await http.delete(Uri.parse("$url?id=$id"));
+              if (!mounted) return;
+              loadData();
+              showMessage('Deleted');
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
   }
 
   void showDialogForm({Map? item}) {
@@ -243,170 +271,162 @@ class _HomePageState extends State<HomePage> {
       builder: (_) => Dialog(
         backgroundColor: Colors.transparent,
         child: _buildGlassCard(
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                    item == null ? "Add Transaction" : "Edit Transaction",
-                    style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
-                    ),
-                    textAlign: TextAlign.center,
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  item == null ? "Add Transaction" : "Edit Transaction",
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: DropdownButtonFormField<String>(
-                      value: type,
-                      decoration: const InputDecoration(
-                        labelText: 'Type',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: "income",
-                          child: Text("Income"),
-                        ),
-                        DropdownMenuItem(
-                          value: "expense",
-                          child: Text("Expense"),
-                        ),
-                      ],
-                      onChanged: (v) {
-                        type = v!;
-                      },
-                    ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
+                  child: DropdownButtonFormField<String>(
+                    value: type,
+                    decoration: const InputDecoration(
+                      labelText: 'Type',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: DropdownButtonFormField<String>(
-                      value: category,
-                      decoration: const InputDecoration(
-                        labelText: 'Category',
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      items:
-                          [
-                                "Food",
-                                "Rent",
-                                "Bill",
-                                "Shopping",
-                                "Transport",
-                                "Entertainment",
-                                "Health",
-                              ]
-                              .map(
-                                (e) =>
-                                    DropdownMenuItem(value: e, child: Text(e)),
-                              )
-                              .toList(),
-                      onChanged: (v) {
-                        category = v!;
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextFormField(
-                      controller: amount,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "Amount",
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                      validator: (v) =>
-                          (v == null || v.isEmpty) ? 'Required' : null,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: TextFormField(
-                      controller: note,
-                      decoration: const InputDecoration(
-                        labelText: "Note",
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            "Cancel",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF87CEEB),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: () {
-                            if (formKey.currentState?.validate() ?? false) {
-                              Map body = {
-                                "id": item?['id'],
-                                "date": DateTime.now().toString().substring(
-                                  0,
-                                  10,
-                                ),
-                                "type": type,
-                                "category": category,
-                                "amount": amount.text,
-                                "note": note.text,
-                              };
-
-                              if (item == null) {
-                                addTransaction(body);
-                              } else {
-                                updateTransaction(body);
-                              }
-
-                              Navigator.pop(context);
-                            }
-                          },
-                          child: const Text("Save"),
-                        ),
+                    items: const [
+                      DropdownMenuItem(value: "income", child: Text("Income")),
+                      DropdownMenuItem(
+                        value: "expense",
+                        child: Text("Expense"),
                       ),
                     ],
+                    onChanged: (v) {
+                      type = v!;
+                    },
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: DropdownButtonFormField<String>(
+                    value: category,
+                    decoration: const InputDecoration(
+                      labelText: 'Category',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    items:
+                        [
+                              "Food",
+                              "Rent",
+                              "Bill",
+                              "Shopping",
+                              "Transport",
+                              "Entertainment",
+                              "Health",
+                            ]
+                            .map(
+                              (e) => DropdownMenuItem(value: e, child: Text(e)),
+                            )
+                            .toList(),
+                    onChanged: (v) {
+                      category = v!;
+                    },
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextFormField(
+                    controller: amount,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "Amount (MMK)",
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    validator: (v) =>
+                        (v == null || v.isEmpty) ? 'Required' : null,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: TextFormField(
+                    controller: note,
+                    decoration: const InputDecoration(
+                      labelText: "Note",
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF87CEEB),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        onPressed: () {
+                          if (formKey.currentState?.validate() ?? false) {
+                            Map body = {
+                              "id": item?['id'],
+                              "date": DateTime.now().toString().substring(
+                                0,
+                                10,
+                              ),
+                              "type": type,
+                              "category": category,
+                              "amount": amount.text,
+                              "note": note.text,
+                            };
+                            if (item == null) {
+                              addTransaction(body);
+                            } else {
+                              updateTransaction(body);
+                            }
+                            Navigator.pop(context);
+                          }
+                        },
+                        child: const Text("Save"),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
         ),
@@ -418,6 +438,12 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     double balance = totalIncome - totalExpense;
     Map<String, double> categoryTotals = getCategoryTotals();
+
+    int currentYear = DateTime.now().year;
+    List<String> years = List.generate(
+      5,
+      (index) => (currentYear - 2 + index).toString(),
+    );
 
     return Scaffold(
       body: Container(
@@ -431,71 +457,130 @@ class _HomePageState extends State<HomePage> {
         child: SafeArea(
           child: Column(
             children: [
-              // App Bar with Glass Effect
-              _buildGlassCard(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.account_balance_wallet,
-                        color: Color(0xFF0077B6),
-                        size: 28,
-                      ),
-                      const SizedBox(width: 12),
-                      const Expanded(
-                        child: Text(
-                          "Money Tracker",
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF0077B6),
-                          ),
-                        ),
-                      ),
-                      // Month Selector with Calendar Icon
-                      _buildGlassCard(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: DropdownButtonHideUnderline(
-                            child: DropdownButton<String>(
-                              value: selectedMonth,
-                              icon: const Icon(
-                                Icons.calendar_month,
-                                color: Color(0xFF0077B6),
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: _buildGlassCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF87CEEB).withOpacity(0.3),
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              dropdownColor: const Color(0xFFE0F7FA),
-                              borderRadius: BorderRadius.circular(12),
-                              items: List.generate(
-                                12,
-                                (index) => DropdownMenuItem(
-                                  value: (index + 1).toString(),
-                                  child: Text(
-                                    monthNames[index],
-                                    style: const TextStyle(
+                              child: const Icon(
+                                Icons.account_balance_wallet,
+                                color: Color(0xFF0077B6),
+                                size: 24,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Text(
+                                "Money Tracker",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF0077B6),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        // Year and Month Selector
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildGlassCard(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedYear,
+                                    isExpanded: true,
+                                    icon: const Icon(
+                                      Icons.calendar_today,
                                       color: Color(0xFF0077B6),
-                                      fontWeight: FontWeight.w500,
+                                      size: 18,
                                     ),
+                                    dropdownColor: const Color(0xFFE0F7FA),
+                                    borderRadius: BorderRadius.circular(12),
+                                    items: years
+                                        .map(
+                                          (year) => DropdownMenuItem(
+                                            value: year,
+                                            child: Text(
+                                              year,
+                                              style: const TextStyle(
+                                                color: Color(0xFF0077B6),
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(),
+                                    onChanged: (value) {
+                                      selectedYear = value!;
+                                      calculateTotals();
+                                      setState(() {});
+                                    },
                                   ),
                                 ),
                               ),
-                              onChanged: (value) {
-                                selectedMonth = value!;
-                                calculateTotals();
-                                setState(() {});
-                              },
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              flex: 2,
+                              child: _buildGlassCard(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedMonth,
+                                    isExpanded: true,
+                                    icon: const Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Color(0xFF0077B6),
+                                    ),
+                                    dropdownColor: const Color(0xFFE0F7FA),
+                                    borderRadius: BorderRadius.circular(12),
+                                    items: List.generate(
+                                      12,
+                                      (index) => DropdownMenuItem(
+                                        value: (index + 1).toString(),
+                                        child: Text(
+                                          monthNames[index],
+                                          style: const TextStyle(
+                                            color: Color(0xFF0077B6),
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    onChanged: (value) {
+                                      selectedMonth = value!;
+                                      calculateTotals();
+                                      setState(() {});
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
 
               // Stats Cards
               Padding(
@@ -503,9 +588,9 @@ class _HomePageState extends State<HomePage> {
                 child: Row(
                   children: [
                     _buildStatCard('Income', totalIncome, Colors.green[700]!),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     _buildStatCard('Expense', totalExpense, Colors.red[700]!),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 8),
                     _buildStatCard(
                       'Balance',
                       balance,
@@ -514,61 +599,57 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
 
               // Pie Chart
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: _buildGlassCard(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: SizedBox(
-                      height: 200,
-                      child: categoryTotals.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No expenses this month',
-                                style: TextStyle(
-                                  color: Color(0xFF0077B6),
-                                  fontSize: 16,
-                                ),
-                              ),
-                            )
-                          : PieChart(
-                              PieChartData(
-                                sectionsSpace: 2,
-                                centerSpaceRadius: 40,
-                                sections: categoryTotals.entries
-                                    .map(
-                                      (e) => PieChartSectionData(
-                                        value: e.value,
-                                        title: e.key,
-                                        color: _getCategoryColor(e.key),
-                                        radius: 50,
-                                        titleStyle: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white,
-                                        ),
-                                      ),
-                                    )
-                                    .toList(),
-                              ),
+                  padding: const EdgeInsets.all(12),
+                  child: SizedBox(
+                    height: 180,
+                    child: categoryTotals.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No expenses',
+                              style: TextStyle(color: Color(0xFF0077B6)),
                             ),
-                    ),
+                          )
+                        : PieChart(
+                            PieChartData(
+                              sectionsSpace: 2,
+                              centerSpaceRadius: 35,
+                              sections: categoryTotals.entries
+                                  .map(
+                                    (e) => PieChartSectionData(
+                                      value: e.value,
+                                      title: e.key,
+                                      color: _getCategoryColor(e.key),
+                                      radius: 45,
+                                      titleStyle: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
+                            ),
+                          ),
                   ),
                 ),
               ),
+              const SizedBox(height: 12),
 
               // Transactions Header
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
                     const Text(
                       'Transactions',
                       style: TextStyle(
-                        fontSize: 18,
+                        fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0077B6),
                       ),
@@ -576,15 +657,15 @@ class _HomePageState extends State<HomePage> {
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
+                        horizontal: 10,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: const Color(0xFF87CEEB).withOpacity(0.3),
-                        borderRadius: BorderRadius.circular(20),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        '${data.length} items',
+                        '${data.length}',
                         style: const TextStyle(
                           color: Color(0xFF0077B6),
                           fontWeight: FontWeight.w500,
@@ -594,6 +675,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
+              const SizedBox(height: 8),
 
               // Transactions List
               Expanded(
@@ -611,14 +693,14 @@ class _HomePageState extends State<HomePage> {
                             const Icon(
                               Icons.error_outline,
                               color: Colors.red,
-                              size: 48,
+                              size: 40,
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             Text(
                               error!,
                               style: const TextStyle(color: Colors.red),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 12),
                             ElevatedButton(
                               onPressed: loadData,
                               child: const Text("Retry"),
@@ -636,23 +718,29 @@ class _HomePageState extends State<HomePage> {
                           String categoryText =
                               item['category']?.toString() ?? '';
                           String dateText = item['date']?.toString() ?? '';
-                          String amountText = item['amount']?.toString() ?? '';
+                          double amountValue =
+                              double.tryParse(
+                                item['amount']?.toString() ?? '0',
+                              ) ??
+                              0;
+                          String itemId = item['id']?.toString() ?? '';
 
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.only(bottom: 8),
                             child: _buildGlassCard(
+                              padding: EdgeInsets.zero,
                               child: ListTile(
                                 contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                                  horizontal: 12,
+                                  vertical: 4,
                                 ),
                                 leading: Container(
-                                  padding: const EdgeInsets.all(10),
+                                  padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
                                     color: isIncome
                                         ? Colors.green.withOpacity(0.2)
                                         : Colors.red.withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(
                                     isIncome
@@ -661,6 +749,7 @@ class _HomePageState extends State<HomePage> {
                                     color: isIncome
                                         ? Colors.green[700]
                                         : Colors.red[700],
+                                    size: 20,
                                   ),
                                 ),
                                 title: Text(
@@ -668,72 +757,50 @@ class _HomePageState extends State<HomePage> {
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
                                     color: Color(0xFF0077B6),
+                                    fontSize: 14,
                                   ),
                                 ),
                                 subtitle: Text(
                                   dateText,
-                                  style: TextStyle(color: Colors.grey[600]),
+                                  style: TextStyle(
+                                    color: Colors.grey[600],
+                                    fontSize: 12,
+                                  ),
                                 ),
                                 trailing: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Text(
-                                      '${isIncome ? '+' : '-'}$amountText',
+                                      '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
                                       style: TextStyle(
                                         color: isIncome
                                             ? Colors.green[700]
                                             : Colors.red[700],
                                         fontWeight: FontWeight.bold,
-                                        fontSize: 16,
+                                        fontSize: 13,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    PopupMenuButton<String>(
+                                    const SizedBox(width: 4),
+                                    // Edit Button
+                                    IconButton(
                                       icon: const Icon(
-                                        Icons.more_vert,
+                                        Icons.edit,
                                         color: Color(0xFF0077B6),
+                                        size: 20,
                                       ),
-                                      itemBuilder: (context) => [
-                                        const PopupMenuItem(
-                                          value: 'edit',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.edit,
-                                                color: Color(0xFF0077B6),
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text('Edit'),
-                                            ],
-                                          ),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                  color: Colors.red,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          showDialogForm(item: item);
-                                        } else if (value == 'delete') {
-                                          deleteTransaction(
-                                            item['id'].toString(),
-                                          );
-                                        }
+                                      onPressed: () {
+                                        showDialogForm(item: item);
+                                      },
+                                    ),
+                                    // Delete Button
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                      onPressed: () {
+                                        deleteTransaction(itemId);
                                       },
                                     ),
                                   ],
@@ -759,8 +826,8 @@ class _HomePageState extends State<HomePage> {
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF87CEEB).withOpacity(0.4),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
