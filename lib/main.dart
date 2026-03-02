@@ -80,7 +80,10 @@ class _HomePageState extends State<HomePage> {
       error = null;
     });
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+      );
       if (response.statusCode == 200) {
         data = jsonDecode(response.body);
         data.sort((a, b) {
@@ -223,12 +226,19 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> addTransaction(Map body) async {
     try {
-      final response = await http.post(Uri.parse(url), body: jsonEncode(body));
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
       if (response.statusCode == 200) {
         loadData();
         showMessage('Transaction added successfully');
       } else {
-        showMessage('Failed to add transaction', isError: true);
+        showMessage(
+          'Failed to add transaction: ${response.statusCode}',
+          isError: true,
+        );
       }
     } catch (e) {
       showMessage('Error: $e', isError: true);
@@ -237,12 +247,21 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> updateTransaction(Map body) async {
     try {
-      final response = await http.put(Uri.parse(url), body: jsonEncode(body));
+      // Add action field for the backend to recognize update operation
+      body['action'] = 'update';
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode(body),
+      );
       if (response.statusCode == 200) {
         loadData();
         showMessage('Transaction updated successfully');
       } else {
-        showMessage('Failed to update transaction', isError: true);
+        showMessage(
+          'Failed to update transaction: ${response.statusCode}',
+          isError: true,
+        );
       }
     } catch (e) {
       showMessage('Error: $e', isError: true);
@@ -251,12 +270,20 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> deleteTransaction(String id) async {
     try {
-      final response = await http.delete(Uri.parse("$url?id=$id"));
+      // Use POST with action field instead of DELETE for proper backend handling
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({'id': id, 'action': 'delete'}),
+      );
       if (response.statusCode == 200) {
         loadData();
         showMessage('Transaction deleted successfully');
       } else {
-        showMessage('Failed to delete transaction', isError: true);
+        showMessage(
+          'Failed to delete transaction: ${response.statusCode}',
+          isError: true,
+        );
       }
     } catch (e) {
       showMessage('Error: $e', isError: true);
