@@ -2554,111 +2554,114 @@ class TransactionsTabState extends State<TransactionsTab> {
                                     padding: const EdgeInsets.only(bottom: 8),
                                     child: _buildGlassCard(
                                       padding: const EdgeInsets.all(12),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(10),
-                                            decoration: BoxDecoration(
-                                              color: isIncome
-                                                  ? Colors.green[50]
-                                                  : Colors.red[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                      child: InkWell(
+                                        onTap: () => showTransactionDetail(item),
+                                        borderRadius: BorderRadius.circular(16),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(10),
+                                              decoration: BoxDecoration(
+                                                color: isIncome
+                                                    ? Colors.green[50]
+                                                    : Colors.red[50],
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              child: Icon(
+                                                isIncome
+                                                    ? Icons.arrow_downward
+                                                    : Icons.arrow_upward,
+                                                color: isIncome
+                                                    ? Colors.green[700]
+                                                    : Colors.red[700],
+                                                size: 20,
+                                              ),
                                             ),
-                                            child: Icon(
-                                              isIncome
-                                                  ? Icons.arrow_downward
-                                                  : Icons.arrow_upward,
-                                              color: isIncome
-                                                  ? Colors.green[700]
-                                                  : Colors.red[700],
-                                              size: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  item['category'] ?? '',
-                                                  style: const TextStyle(
-                                                    fontWeight: FontWeight.w600,
-                                                    color: Color(0xFF0077B6),
-                                                    fontSize: 14,
-                                                  ),
-                                                ),
-                                                Text(
-                                                  noteText.isNotEmpty
-                                                      ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
-                                                      : (item['date'] ?? ''),
-                                                  style: TextStyle(
-                                                    color: Colors.grey[600],
-                                                    fontSize: 12,
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          Text(
-                                            '${isIncome ? '+' : '-'}${formatMMK(double.tryParse(item['amount']?.toString() ?? '0') ?? 0)}',
-                                            style: TextStyle(
-                                              color: isIncome
-                                                  ? Colors.green[700]
-                                                  : Colors.red[700],
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          IconButton(
-                                            icon: const Icon(
-                                              Icons.delete_outline,
-                                              color: Colors.red,
-                                              size: 20,
-                                            ),
-                                            onPressed: () {
-                                              showDialog(
-                                                context: context,
-                                                builder: (ctx) => AlertDialog(
-                                                  title: const Text(
-                                                    'Delete Transaction',
-                                                  ),
-                                                  content: const Text(
-                                                    'Are you sure you want to delete this transaction?',
-                                                  ),
-                                                  actions: [
-                                                    TextButton(
-                                                      onPressed: () =>
-                                                          Navigator.pop(ctx),
-                                                      child: const Text(
-                                                        'Cancel',
-                                                      ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    item['category'] ?? '',
+                                                    style: const TextStyle(
+                                                      fontWeight: FontWeight.w600,
+                                                      color: Color(0xFF0077B6),
+                                                      fontSize: 14,
                                                     ),
-                                                    ElevatedButton(
-                                                      style:
-                                                          ElevatedButton.styleFrom(
-                                                            backgroundColor:
-                                                                Colors.red,
-                                                          ),
-                                                      onPressed: () {
-                                                        Navigator.pop(ctx);
-                                                        deleteTransaction(
-                                                          item['id']
-                                                                  ?.toString() ??
-                                                              '',
-                                                        );
-                                                      },
-                                                      child: const Text(
-                                                        'Delete',
-                                                        style: TextStyle(
-                                                          color: Colors.white,
+                                                  ),
+                                                  Text(
+                                                    noteText.isNotEmpty
+                                                        ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
+                                                        : (item['date'] ?? ''),
+                                                    style: TextStyle(
+                                                      color: Colors.grey[600],
+                                                      fontSize: 12,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Text(
+                                              '${isIncome ? '+' : '-'}${formatMMK(double.tryParse(item['amount']?.toString() ?? '0') ?? 0)}',
+                                              style: TextStyle(
+                                                color: isIncome
+                                                    ? Colors.green[700]
+                                                    : Colors.red[700],
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                                color: Colors.red,
+                                                size: 20,
+                                              ),
+                                              onPressed: () {
+                                                showDialog(
+                                                  context: context,
+                                                  builder: (ctx) => AlertDialog(
+                                                    title: const Text(
+                                                      'Delete Transaction',
+                                                    ),
+                                                    content: const Text(
+                                                      'Are you sure you want to delete this transaction?',
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () =>
+                                                            Navigator.pop(ctx),
+                                                        child: const Text(
+                                                          'Cancel',
                                                         ),
                                                       ),
+                                                      ElevatedButton(
+                                                        style:
+                                                            ElevatedButton.styleFrom(
+                                                              backgroundColor:
+                                                                  Colors.red,
+                                                            ),
+                                                        onPressed: () {
+                                                          Navigator.pop(ctx);
+                                                          deleteTransaction(
+                                                            item['id']
+                                                                    ?.toString() ??
+                                                                '',
+                                                          );
+                                                        },
+                                                        child: const Text(
+                                                          'Delete',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                          ),
+                                                        ),
                                                     ),
                                                   ],
                                                 ),
@@ -2668,6 +2671,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                                         ],
                                       ),
                                     ),
+                                    )
                                   );
                                 },
                               ),
