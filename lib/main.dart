@@ -36,7 +36,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final String url =
-      "https://script.google.com/macros/s/AKfycby0elRrVVqSKwHQgJXYx44eP6D0W-BtLypq1zl-ev0rqDUXzqBzkIBN1Wxsi0aVK_9ImA/exec";
+      "https://script.google.com/macros/s/AKfycbx2grg3odTkT7KlCvjiUzCH80jXLsrZX2gnFDCntu2FQpW5ko4urwJkn8fd81cBOOKmpA/exec";
 
   List data = [];
   String selectedMonth = DateTime.now().month.toString();
@@ -210,11 +210,11 @@ class _HomePageState extends State<HomePage> {
     return result;
   }
 
-  void showMessage(String msg) {
+  void showMessage(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: const Color(0xFF87CEEB),
+        backgroundColor: isError ? Colors.red : const Color(0xFF87CEEB),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -222,20 +222,48 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> addTransaction(Map body) async {
-    await http.post(Uri.parse(url), body: jsonEncode(body));
-    if (!mounted) return;
-    loadData();
-    showMessage('Added');
+    try {
+      final response = await http.post(Uri.parse(url), body: jsonEncode(body));
+      if (response.statusCode == 200) {
+        loadData();
+        showMessage('Transaction added successfully');
+      } else {
+        showMessage('Failed to add transaction', isError: true);
+      }
+    } catch (e) {
+      showMessage('Error: $e', isError: true);
+    }
   }
 
   Future<void> updateTransaction(Map body) async {
-    await http.put(Uri.parse(url), body: jsonEncode(body));
-    if (!mounted) return;
-    loadData();
-    showMessage('Updated');
+    try {
+      final response = await http.put(Uri.parse(url), body: jsonEncode(body));
+      if (response.statusCode == 200) {
+        loadData();
+        showMessage('Transaction updated successfully');
+      } else {
+        showMessage('Failed to update transaction', isError: true);
+      }
+    } catch (e) {
+      showMessage('Error: $e', isError: true);
+    }
   }
 
   Future<void> deleteTransaction(String id) async {
+    try {
+      final response = await http.delete(Uri.parse("$url?id=$id"));
+      if (response.statusCode == 200) {
+        loadData();
+        showMessage('Transaction deleted successfully');
+      } else {
+        showMessage('Failed to delete transaction', isError: true);
+      }
+    } catch (e) {
+      showMessage('Error: $e', isError: true);
+    }
+  }
+
+  void showDeleteConfirmation(String id) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -250,12 +278,9 @@ class _HomePageState extends State<HomePage> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () async {
+            onPressed: () {
               Navigator.pop(ctx);
-              await http.delete(Uri.parse("$url?id=$id"));
-              if (!mounted) return;
-              loadData();
-              showMessage('Deleted');
+              deleteTransaction(id);
             },
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
@@ -264,8 +289,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Show transaction detail dialog
-  void showTransactionDetail(Map item) {
+  void showTransactionDetail(Map<String, dynamic> item) {
     String typeVal = item['type']?.toString() ?? '';
     bool isIncome = typeVal == 'income';
     String categoryText = item['category']?.toString() ?? '';
@@ -273,6 +297,7 @@ class _HomePageState extends State<HomePage> {
     String noteText = item['note']?.toString() ?? '';
     double amountValue =
         double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    String itemId = item['id']?.toString() ?? '';
 
     showModalBottomSheet(
       context: context,
@@ -297,7 +322,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            // Category Icon
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -329,7 +353,6 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            // Details
             _buildDetailRow(Icons.calendar_today, 'Date', dateText),
             _buildDetailRow(Icons.category, 'Category', categoryText),
             _buildDetailRow(
@@ -343,7 +366,6 @@ class _HomePageState extends State<HomePage> {
               noteText.isEmpty ? 'No note' : noteText,
             ),
             const SizedBox(height: 20),
-            // Action Buttons
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -362,7 +384,7 @@ class _HomePageState extends State<HomePage> {
                       label: const Text('Edit'),
                       onPressed: () {
                         Navigator.pop(ctx);
-                        showDialogForm(item: item);
+                        showEditForm(item);
                       },
                     ),
                   ),
@@ -381,7 +403,7 @@ class _HomePageState extends State<HomePage> {
                       label: const Text('Delete'),
                       onPressed: () {
                         Navigator.pop(ctx);
-                        deleteTransaction(item['id']?.toString() ?? '');
+                        showDeleteConfirmation(itemId);
                       },
                     ),
                   ),
@@ -416,180 +438,358 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void showDialogForm({Map? item}) {
-    final TextEditingController amount = TextEditingController(
-      text: item?['amount']?.toString(),
+  void showEditForm(Map<String, dynamic> item) {
+    final TextEditingController amountController = TextEditingController(
+      text: item['amount']?.toString() ?? '',
     );
-    final TextEditingController note = TextEditingController(
-      text: item?['note']?.toString(),
+    final TextEditingController noteController = TextEditingController(
+      text: item['note']?.toString() ?? '',
     );
 
-    String type = item?['type']?.toString() ?? "income";
-    String category = item?['category']?.toString() ?? "Food";
-
-    final formKey = GlobalKey<FormState>();
+    String selectedType = item['type']?.toString() ?? 'expense';
+    String selectedCategory = item['category']?.toString() ?? 'Food';
+    String itemId = item['id']?.toString() ?? '';
 
     showDialog(
       context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.transparent,
-        child: _buildGlassCard(
-          padding: const EdgeInsets.all(20),
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  item == null ? "Add Transaction" : "Edit Transaction",
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF0077B6),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: type,
-                    decoration: const InputDecoration(
-                      labelText: 'Type',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: _buildGlassCard(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    "Edit Transaction",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0077B6),
                     ),
-                    items: const [
-                      DropdownMenuItem(value: "income", child: Text("Income")),
-                      DropdownMenuItem(
-                        value: "expense",
-                        child: Text("Expense"),
-                      ),
-                    ],
-                    onChanged: (v) {
-                      type = v!;
-                    },
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: DropdownButtonFormField<String>(
-                    value: category,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
+                  const SizedBox(height: 16),
+                  // Type Dropdown
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    items:
-                        [
-                              "Food",
-                              "Rent",
-                              "Bill",
-                              "Shopping",
-                              "Transport",
-                              "Entertainment",
-                              "Health",
-                            ]
-                            .map(
-                              (e) => DropdownMenuItem(value: e, child: Text(e)),
-                            )
-                            .toList(),
-                    onChanged: (v) {
-                      category = v!;
-                    },
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextFormField(
-                    controller: amount,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Amount (MMK)",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                    validator: (v) =>
-                        (v == null || v.isEmpty) ? 'Required' : null,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: TextFormField(
-                    controller: note,
-                    decoration: const InputDecoration(
-                      labelText: "Note",
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(horizontal: 12),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: Colors.grey),
+                    child: DropdownButton<String>(
+                      value: selectedType,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: "income",
+                          child: Text("Income"),
                         ),
+                        DropdownMenuItem(
+                          value: "expense",
+                          child: Text("Expense"),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedType = v!;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Category Dropdown
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButton<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items:
+                          [
+                                "Food",
+                                "Rent",
+                                "Bill",
+                                "Shopping",
+                                "Transport",
+                                "Entertainment",
+                                "Health",
+                              ]
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedCategory = v!;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  // Amount
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Amount (MMK)",
+                        border: InputBorder.none,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF87CEEB),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
+                  ),
+                  const SizedBox(height: 10),
+                  // Note
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      decoration: const InputDecoration(
+                        labelText: "Note",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.grey),
                           ),
                         ),
-                        onPressed: () {
-                          if (formKey.currentState?.validate() ?? false) {
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF87CEEB),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (amountController.text.isEmpty) {
+                              showMessage('Please enter amount', isError: true);
+                              return;
+                            }
                             Map body = {
-                              "id": item?['id'],
+                              "id": itemId,
+                              "date":
+                                  item['date']?.toString() ??
+                                  DateTime.now().toString().substring(0, 10),
+                              "type": selectedType,
+                              "category": selectedCategory,
+                              "amount": amountController.text,
+                              "note": noteController.text,
+                            };
+                            Navigator.pop(ctx);
+                            updateTransaction(body);
+                          },
+                          child: const Text("Update"),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void showAddForm() {
+    final TextEditingController amountController = TextEditingController();
+    final TextEditingController noteController = TextEditingController();
+
+    String selectedType = 'expense';
+    String selectedCategory = 'Food';
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          child: _buildGlassCard(
+            padding: const EdgeInsets.all(20),
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    "Add Transaction",
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0077B6),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButton<String>(
+                      value: selectedType,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items: const [
+                        DropdownMenuItem(
+                          value: "income",
+                          child: Text("Income"),
+                        ),
+                        DropdownMenuItem(
+                          value: "expense",
+                          child: Text("Expense"),
+                        ),
+                      ],
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedType = v!;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: DropdownButton<String>(
+                      value: selectedCategory,
+                      isExpanded: true,
+                      underline: const SizedBox(),
+                      items:
+                          [
+                                "Food",
+                                "Rent",
+                                "Bill",
+                                "Shopping",
+                                "Transport",
+                                "Entertainment",
+                                "Health",
+                              ]
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
+                      onChanged: (v) {
+                        setDialogState(() {
+                          selectedCategory = v!;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      controller: amountController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: "Amount (MMK)",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: TextField(
+                      controller: noteController,
+                      decoration: const InputDecoration(
+                        labelText: "Note",
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () => Navigator.pop(ctx),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: Colors.grey),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF87CEEB),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          onPressed: () {
+                            if (amountController.text.isEmpty) {
+                              showMessage('Please enter amount', isError: true);
+                              return;
+                            }
+                            Map body = {
                               "date": DateTime.now().toString().substring(
                                 0,
                                 10,
                               ),
-                              "type": type,
-                              "category": category,
-                              "amount": amount.text,
-                              "note": note.text,
+                              "type": selectedType,
+                              "category": selectedCategory,
+                              "amount": amountController.text,
+                              "note": noteController.text,
                             };
-                            if (item == null) {
-                              addTransaction(body);
-                            } else {
-                              updateTransaction(body);
-                            }
-                            Navigator.pop(context);
-                          }
-                        },
-                        child: const Text("Save"),
+                            Navigator.pop(ctx);
+                            addTransaction(body);
+                          },
+                          child: const Text("Add"),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -656,7 +856,6 @@ class _HomePageState extends State<HomePage> {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        // Year and Month Selector
                         Row(
                           children: [
                             Expanded(
@@ -910,7 +1109,6 @@ class _HomePageState extends State<HomePage> {
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
                                     children: [
-                                      // Icon
                                       Container(
                                         padding: const EdgeInsets.all(10),
                                         decoration: BoxDecoration(
@@ -932,7 +1130,6 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       const SizedBox(width: 12),
-                                      // Info
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
@@ -961,7 +1158,6 @@ class _HomePageState extends State<HomePage> {
                                           ],
                                         ),
                                       ),
-                                      // Amount
                                       Text(
                                         '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
                                         style: TextStyle(
@@ -1002,7 +1198,7 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
         child: FloatingActionButton(
-          onPressed: () => showDialogForm(),
+          onPressed: showAddForm,
           backgroundColor: Colors.transparent,
           elevation: 0,
           child: const Icon(Icons.add, color: Colors.white),
