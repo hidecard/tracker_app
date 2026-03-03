@@ -332,6 +332,7 @@ class _HomeTabState extends State<HomeTab> {
 
   double totalIncome = 0;
   double totalExpense = 0;
+  double totalSaved = 0;
 
   bool isLoading = false;
   bool isRefreshing = false;
@@ -894,6 +895,7 @@ class _HomeTabState extends State<HomeTab> {
   void calculateTotals() {
     totalIncome = 0;
     totalExpense = 0;
+    totalSaved = 0;
     for (var item in data) {
       try {
         DateTime date = DateTime.parse(item['date'] ?? '');
@@ -902,8 +904,11 @@ class _HomeTabState extends State<HomeTab> {
           if (item['type'] == 'income') {
             totalIncome +=
                 double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
-          } else {
+          } else if (item['type'] == 'expense') {
             totalExpense +=
+                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+          } else if (item['type'] == 'save') {
+            totalSaved +=
                 double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           }
         }
@@ -1183,7 +1188,7 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    double balance = totalIncome - totalExpense;
+    double balance = totalIncome - totalExpense - totalSaved;
     Map<String, double> categoryTotals = getCategoryTotals();
     int currentYear = DateTime.now().year;
     List<String> years = List.generate(
@@ -1381,6 +1386,13 @@ class _HomeTabState extends State<HomeTab> {
                       totalExpense,
                       Colors.red[700]!,
                       Icons.arrow_upward,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildStatCard(
+                      'save_money',
+                      totalSaved,
+                      Colors.blue[700]!,
+                      Icons.savings,
                     ),
                     const SizedBox(width: 8),
                     _buildStatCard(
