@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 
 class AppLocalizations {
-  // Simple single-language translation helper (English only).
   static String t(String key) => _values[key] ?? key;
 
   static const Map<String, String> _values = {
@@ -69,11 +68,11 @@ class MyApp extends StatelessWidget {
           seedColor: const Color(0xFF87CEEB),
           brightness: Brightness.light,
         ),
-        appBarTheme: AppBarTheme(
+        appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
-          titleTextStyle: const TextStyle(
+          titleTextStyle: TextStyle(
             color: Color(0xFF0077B6),
             fontWeight: FontWeight.bold,
             fontSize: 20,
@@ -118,9 +117,6 @@ class MainScreen extends StatefulWidget {
 class MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
-  // keys allow us to reach into the tab states so that the "add" button
-  // (either from the bottom nav or an app bar) can delegate to the
-  // currently visible page.
   final GlobalKey<_HomeTabState> _homeKey = GlobalKey<_HomeTabState>();
   final GlobalKey<TransactionsTabState> _transactionsKey =
       GlobalKey<TransactionsTabState>();
@@ -132,7 +128,6 @@ class MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    // include the new save tab at the end
     _pages = [
       HomeTab(key: _homeKey),
       TransactionsTab(key: _transactionsKey),
@@ -298,16 +293,12 @@ class MainScreenState extends State<MainScreen> {
     );
   }
 
-  /// Forward the add request to the active tab.  With only two pages the
-  /// index will be either home (0) or transactions (1); anything else simply
-  /// shows the home form.
   void _showAddFormFromNav() {
     if (_currentIndex == 1) {
       _transactionsKey.currentState?.showAddForm();
     } else if (_currentIndex == 2) {
       _saveKey.currentState?.showAddForm();
     } else {
-      // default to home
       _homeKey.currentState?.showAddForm();
     }
   }
@@ -399,7 +390,6 @@ class _HomeTabState extends State<HomeTab> {
   Future<void> addTransaction(Map body) async {
     body['action'] = 'add';
     try {
-      body['action'] = 'add';
       final response = await http.post(
         Uri.parse(url),
         headers: {"Content-Type": "application/json"},
@@ -425,6 +415,7 @@ class _HomeTabState extends State<HomeTab> {
   void showTransactionDetail(Map<String, dynamic> item) {
     String typeVal = item['type']?.toString() ?? '';
     bool isIncome = typeVal == 'income';
+    bool isSave = typeVal == 'save';
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
     String noteText = item['note']?.toString() ?? '';
@@ -458,18 +449,26 @@ class _HomeTabState extends State<HomeTab> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isIncome ? Colors.green[50] : Colors.red[50],
+                color: isSave
+                    ? Colors.blue[50]
+                    : (isIncome ? Colors.green[50] : Colors.red[50]),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                color: isIncome ? Colors.green[700] : Colors.red[700],
+                isSave
+                    ? Icons.savings
+                    : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
+                color: isSave
+                    ? Colors.blue[700]
+                    : (isIncome ? Colors.green[700] : Colors.red[700]),
                 size: 32,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              categoryText,
+              categoryText.isEmpty
+                  ? AppLocalizations.t('save_money')
+                  : categoryText,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -482,7 +481,9 @@ class _HomeTabState extends State<HomeTab> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: isIncome ? Colors.green[700] : Colors.red[700],
+                color: isSave
+                    ? Colors.blue[700]
+                    : (isIncome ? Colors.green[700] : Colors.red[700]),
               ),
             ),
             const SizedBox(height: 20),
@@ -494,14 +495,16 @@ class _HomeTabState extends State<HomeTab> {
             _buildDetailRow(
               Icons.category,
               AppLocalizations.t('category'),
-              categoryText,
+              categoryText.isEmpty ? '-' : categoryText,
             ),
             _buildDetailRow(
               Icons.attach_money,
               AppLocalizations.t('type'),
-              isIncome
-                  ? AppLocalizations.t('income')
-                  : AppLocalizations.t('expense'),
+              isSave
+                  ? AppLocalizations.t('save_money')
+                  : (isIncome
+                        ? AppLocalizations.t('income')
+                        : AppLocalizations.t('expense')),
             ),
             _buildDetailRow(
               Icons.note,
@@ -782,6 +785,7 @@ class _HomeTabState extends State<HomeTab> {
     );
   }
 
+  @override
   void initState() {
     super.initState();
     loadData();
@@ -832,10 +836,7 @@ class _HomeTabState extends State<HomeTab> {
       calculateTotals();
       setState(() => isLoading = false);
     } else {
-      setState(() {
-        isLoading = true;
-        error = null;
-      });
+      setState(() => isLoading = true);
     }
 
     try {
@@ -916,8 +917,6 @@ class _HomeTabState extends State<HomeTab> {
     }
   }
 
-  /// Show the add transaction dialog; needed so that the main screen can
-  /// delegate to this tab via a global key.
   void showAddForm() {
     final TextEditingController amountController = TextEditingController();
     final TextEditingController noteController = TextEditingController();
@@ -938,7 +937,7 @@ class _HomeTabState extends State<HomeTab> {
                 children: [
                   Text(
                     AppLocalizations.t('add_transaction'),
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF0077B6),
@@ -980,27 +979,21 @@ class _HomeTabState extends State<HomeTab> {
                       value: selectedCategory,
                       isExpanded: true,
                       underline: const SizedBox(),
-                      items: const [
-                        DropdownMenuItem(value: "Food", child: Text("Food")),
-                        DropdownMenuItem(value: "Rent", child: Text("Rent")),
-                        DropdownMenuItem(value: "Bill", child: Text("Bill")),
-                        DropdownMenuItem(
-                          value: "Shopping",
-                          child: Text("Shopping"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Transport",
-                          child: Text("Transport"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Entertainment",
-                          child: Text("Entertainment"),
-                        ),
-                        DropdownMenuItem(
-                          value: "Health",
-                          child: Text("Health"),
-                        ),
-                      ],
+                      items:
+                          [
+                                "Food",
+                                "Rent",
+                                "Bill",
+                                "Shopping",
+                                "Transport",
+                                "Entertainment",
+                                "Health",
+                              ]
+                              .map(
+                                (e) =>
+                                    DropdownMenuItem(value: e, child: Text(e)),
+                              )
+                              .toList(),
                       onChanged: (v) =>
                           setDialogState(() => selectedCategory = v!),
                     ),
@@ -1249,7 +1242,7 @@ class _HomeTabState extends State<HomeTab> {
                                 children: [
                                   Text(
                                     AppLocalizations.t('current_balance'),
-                                    style: TextStyle(
+                                    style: const TextStyle(
                                       fontSize: 12,
                                       color: Color(0xFF0077B6),
                                     ),
@@ -1493,6 +1486,7 @@ class _HomeTabState extends State<HomeTab> {
                           itemBuilder: (context, index) {
                             var item = data[index];
                             bool isIncome = item['type'] == 'income';
+                            bool isSave = item['type'] == 'save';
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 8),
                               child: _buildGlassCard(
@@ -1507,20 +1501,26 @@ class _HomeTabState extends State<HomeTab> {
                                         Container(
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: isIncome
-                                                ? Colors.green[50]
-                                                : Colors.red[50],
+                                            color: isSave
+                                                ? Colors.blue[50]
+                                                : (isIncome
+                                                      ? Colors.green[50]
+                                                      : Colors.red[50]),
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
                                           ),
                                           child: Icon(
-                                            isIncome
-                                                ? Icons.arrow_downward
-                                                : Icons.arrow_upward,
-                                            color: isIncome
-                                                ? Colors.green[700]
-                                                : Colors.red[700],
+                                            isSave
+                                                ? Icons.savings
+                                                : (isIncome
+                                                      ? Icons.arrow_downward
+                                                      : Icons.arrow_upward),
+                                            color: isSave
+                                                ? Colors.blue[700]
+                                                : (isIncome
+                                                      ? Colors.green[700]
+                                                      : Colors.red[700]),
                                             size: 20,
                                           ),
                                         ),
@@ -1531,7 +1531,12 @@ class _HomeTabState extends State<HomeTab> {
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                item['category'] ?? '',
+                                                item['category'] ??
+                                                    (isSave
+                                                        ? AppLocalizations.t(
+                                                            'save_money',
+                                                          )
+                                                        : ''),
                                                 style: const TextStyle(
                                                   fontWeight: FontWeight.w600,
                                                   color: Color(0xFF0077B6),
@@ -1551,9 +1556,11 @@ class _HomeTabState extends State<HomeTab> {
                                         Text(
                                           '${isIncome ? '+' : '-'}${formatMMK(double.tryParse(item['amount']?.toString() ?? '0') ?? 0)}',
                                           style: TextStyle(
-                                            color: isIncome
-                                                ? Colors.green[700]
-                                                : Colors.red[700],
+                                            color: isSave
+                                                ? Colors.blue[700]
+                                                : (isIncome
+                                                      ? Colors.green[700]
+                                                      : Colors.red[700]),
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),
@@ -1599,10 +1606,8 @@ class TransactionsTabState extends State<TransactionsTab> {
   void initState() {
     super.initState();
     if (widget.forcedType != null) {
-      // when a type is forced we default filter to that type
       selectedType = widget.forcedType!;
     }
-    // original behavior from later initState
     loadData();
     _startAutoRefresh();
   }
@@ -1686,6 +1691,7 @@ class TransactionsTabState extends State<TransactionsTab> {
   void showTransactionDetail(Map<String, dynamic> item) {
     String typeVal = item['type']?.toString() ?? '';
     bool isIncome = typeVal == 'income';
+    bool isSave = typeVal == 'save';
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
     String noteText = item['note']?.toString() ?? '';
@@ -1719,18 +1725,26 @@ class TransactionsTabState extends State<TransactionsTab> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: isIncome ? Colors.green[50] : Colors.red[50],
+                color: isSave
+                    ? Colors.blue[50]
+                    : (isIncome ? Colors.green[50] : Colors.red[50]),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isIncome ? Icons.arrow_downward : Icons.arrow_upward,
-                color: isIncome ? Colors.green[700] : Colors.red[700],
+                isSave
+                    ? Icons.savings
+                    : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
+                color: isSave
+                    ? Colors.blue[700]
+                    : (isIncome ? Colors.green[700] : Colors.red[700]),
                 size: 32,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              categoryText,
+              categoryText.isEmpty
+                  ? AppLocalizations.t('save_money')
+                  : categoryText,
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -1743,7 +1757,9 @@ class TransactionsTabState extends State<TransactionsTab> {
               style: TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
-                color: isIncome ? Colors.green[700] : Colors.red[700],
+                color: isSave
+                    ? Colors.blue[700]
+                    : (isIncome ? Colors.green[700] : Colors.red[700]),
               ),
             ),
             const SizedBox(height: 20),
@@ -1755,14 +1771,16 @@ class TransactionsTabState extends State<TransactionsTab> {
             _buildDetailRow(
               Icons.category,
               AppLocalizations.t('category'),
-              categoryText,
+              categoryText.isEmpty ? '-' : categoryText,
             ),
             _buildDetailRow(
               Icons.attach_money,
               AppLocalizations.t('type'),
-              isIncome
-                  ? AppLocalizations.t('income')
-                  : AppLocalizations.t('expense'),
+              isSave
+                  ? AppLocalizations.t('save_money')
+                  : (isIncome
+                        ? AppLocalizations.t('income')
+                        : AppLocalizations.t('expense')),
             ),
             _buildDetailRow(
               Icons.note,
@@ -1869,7 +1887,6 @@ class TransactionsTabState extends State<TransactionsTab> {
   }
 
   void showEditForm(Map<String, dynamic> item) {
-    // if we're editing a save entry, show a simpler dialog
     if (widget.forcedType == 'save') {
       final TextEditingController amountController = TextEditingController(
         text: item['amount']?.toString() ?? '',
@@ -1878,8 +1895,6 @@ class TransactionsTabState extends State<TransactionsTab> {
         text: item['note']?.toString() ?? '',
       );
       String itemId = item['id']?.toString() ?? '';
-
-      // Parse the existing date or use today
       DateTime selectedDate;
       try {
         selectedDate = DateTime.parse(item['date']?.toString() ?? '');
@@ -1909,7 +1924,6 @@ class TransactionsTabState extends State<TransactionsTab> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    // Date Picker
                     GestureDetector(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -1932,9 +1946,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                           },
                         );
                         if (picked != null) {
-                          setDialogState(() {
-                            selectedDate = picked;
-                          });
+                          setDialogState(() => selectedDate = picked);
                         }
                       },
                       child: Container(
@@ -2060,6 +2072,7 @@ class TransactionsTabState extends State<TransactionsTab> {
       );
       return;
     }
+
     final TextEditingController amountController = TextEditingController(
       text: item['amount']?.toString() ?? '',
     );
@@ -2254,15 +2267,14 @@ class TransactionsTabState extends State<TransactionsTab> {
                   children: [
                     Text(
                       AppLocalizations.t('save_money'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFF0077B6),
+                        color: Color(0xFF0077B6),
                       ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 16),
-                    // Date Picker
                     GestureDetector(
                       onTap: () async {
                         final DateTime? picked = await showDatePicker(
@@ -2285,9 +2297,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                           },
                         );
                         if (picked != null) {
-                          setDialogState(() {
-                            selectedDate = picked;
-                          });
+                          setDialogState(() => selectedDate = picked);
                         }
                       },
                       child: Container(
@@ -2412,6 +2422,7 @@ class TransactionsTabState extends State<TransactionsTab> {
       );
       return;
     }
+
     final TextEditingController amountController = TextEditingController();
     final TextEditingController noteController = TextEditingController();
     String selectedType = 'expense';
@@ -2684,7 +2695,6 @@ class TransactionsTabState extends State<TransactionsTab> {
           typeMatch = item['type'] == widget.forcedType;
         } else {
           if (selectedType == 'all') {
-            // exclude save entries from normal transactions list
             typeMatch = item['type'] != 'save';
           } else {
             typeMatch = item['type'] == selectedType;
@@ -2848,7 +2858,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                                         ),
                                       ),
                                     ),
-                                  ),
+                                  ).toList(),
                                   onChanged: (v) {
                                     selectedMonth = v!;
                                     setState(() {});
@@ -2902,7 +2912,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                       widget.forcedType == 'save'
                           ? AppLocalizations.t('saved_transactions')
                           : AppLocalizations.t('transactions'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF0077B6),
@@ -2969,6 +2979,7 @@ class TransactionsTabState extends State<TransactionsTab> {
                                 itemBuilder: (context, index) {
                                   var item = filtered[index];
                                   bool isIncome = item['type'] == 'income';
+                                  bool isSave = item['type'] == 'save';
                                   String noteText =
                                       item['note']?.toString() ?? '';
                                   return Padding(
@@ -2984,19 +2995,25 @@ class TransactionsTabState extends State<TransactionsTab> {
                                             Container(
                                               padding: const EdgeInsets.all(10),
                                               decoration: BoxDecoration(
-                                                color: isIncome
-                                                    ? Colors.green[50]
-                                                    : Colors.red[50],
+                                                color: isSave
+                                                    ? Colors.blue[50]
+                                                    : (isIncome
+                                                          ? Colors.green[50]
+                                                          : Colors.red[50]),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
                                               ),
                                               child: Icon(
-                                                isIncome
-                                                    ? Icons.arrow_downward
-                                                    : Icons.arrow_upward,
-                                                color: isIncome
-                                                    ? Colors.green[700]
-                                                    : Colors.red[700],
+                                                isSave
+                                                    ? Icons.savings
+                                                    : (isIncome
+                                                          ? Icons.arrow_downward
+                                                          : Icons.arrow_upward),
+                                                color: isSave
+                                                    ? Colors.blue[700]
+                                                    : (isIncome
+                                                          ? Colors.green[700]
+                                                          : Colors.red[700]),
                                                 size: 20,
                                               ),
                                             ),
@@ -3007,7 +3024,12 @@ class TransactionsTabState extends State<TransactionsTab> {
                                                     CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
-                                                    item['category'] ?? '',
+                                                    item['category'] ??
+                                                        (isSave
+                                                            ? AppLocalizations.t(
+                                                                'save_money',
+                                                              )
+                                                            : ''),
                                                     style: const TextStyle(
                                                       fontWeight:
                                                           FontWeight.w600,
@@ -3033,9 +3055,11 @@ class TransactionsTabState extends State<TransactionsTab> {
                                             Text(
                                               '${isIncome ? '+' : '-'}${formatMMK(double.tryParse(item['amount']?.toString() ?? '0') ?? 0)}',
                                               style: TextStyle(
-                                                color: isIncome
-                                                    ? Colors.green[700]
-                                                    : Colors.red[700],
+                                                color: isSave
+                                                    ? Colors.blue[700]
+                                                    : (isIncome
+                                                          ? Colors.green[700]
+                                                          : Colors.red[700]),
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 14,
                                               ),
