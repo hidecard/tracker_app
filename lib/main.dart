@@ -44,6 +44,10 @@ class AppLocalizations {
     'language': 'Language',
     'english': 'English',
     'myanmar': 'မြန်မာ',
+    'save': 'Save',
+    'save_money': 'Save Money',
+    'saved_transactions': 'Saved Records',
+    'day': 'Day',
   };
 }
 
@@ -120,13 +124,20 @@ class MainScreenState extends State<MainScreen> {
   final GlobalKey<_HomeTabState> _homeKey = GlobalKey<_HomeTabState>();
   final GlobalKey<TransactionsTabState> _transactionsKey =
       GlobalKey<TransactionsTabState>();
+  final GlobalKey<TransactionsTabState> _saveKey =
+      GlobalKey<TransactionsTabState>();
 
   late final List<Widget> _pages;
 
   @override
   void initState() {
     super.initState();
-    _pages = [HomeTab(key: _homeKey), TransactionsTab(key: _transactionsKey)];
+    // include the new save tab at the end
+    _pages = [
+      HomeTab(key: _homeKey),
+      TransactionsTab(key: _transactionsKey),
+      TransactionsTab(key: _saveKey, forcedType: 'save'),
+    ];
   }
 
   void setCurrentIndex(int index) {
@@ -184,6 +195,12 @@ class MainScreenState extends State<MainScreen> {
                       'transactions',
                     ),
                     _buildCenterAddButton(context),
+                    _buildNavItem(
+                      2,
+                      Icons.savings_outlined,
+                      Icons.savings,
+                      'save',
+                    ),
                   ],
                 ),
               ),
@@ -287,6 +304,8 @@ class MainScreenState extends State<MainScreen> {
   void _showAddFormFromNav() {
     if (_currentIndex == 1) {
       _transactionsKey.currentState?.showAddForm();
+    } else if (_currentIndex == 2) {
+      _saveKey.currentState?.showAddForm();
     } else {
       // default to home
       _homeKey.currentState?.showAddForm();
@@ -1547,7 +1566,8 @@ class _HomeTabState extends State<HomeTab> {
 
 // ==================== TRANSACTIONS TAB ====================
 class TransactionsTab extends StatefulWidget {
-  const TransactionsTab({super.key});
+  final String? forcedType;
+  const TransactionsTab({super.key, this.forcedType});
 
   @override
   State<TransactionsTab> createState() => TransactionsTabState();
@@ -1562,6 +1582,18 @@ class TransactionsTabState extends State<TransactionsTab> {
   String selectedMonth = DateTime.now().month.toString();
   String selectedYear = DateTime.now().year.toString();
   String selectedType = 'all';
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.forcedType != null) {
+      // when a type is forced we default filter to that type
+      selectedType = widget.forcedType!;
+    }
+    // original behavior from later initState
+    loadData();
+    _startAutoRefresh();
+  }
 
   bool isLoading = false;
   bool isRefreshing = false;
@@ -1825,6 +1857,197 @@ class TransactionsTabState extends State<TransactionsTab> {
   }
 
   void showEditForm(Map<String, dynamic> item) {
+    // if we're editing a save entry, show a simpler dialog
+    if (widget.forcedType == 'save') {
+      final TextEditingController amountController = TextEditingController(
+        text: item['amount']?.toString() ?? '',
+      );
+      final TextEditingController noteController = TextEditingController(
+        text: item['note']?.toString() ?? '',
+      );
+      String itemId = item['id']?.toString() ?? '';
+
+      // Parse the existing date or use today
+      DateTime selectedDate;
+      try {
+        selectedDate = DateTime.parse(item['date']?.toString() ?? '');
+      } catch (_) {
+        selectedDate = DateTime.now();
+      }
+
+      showDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (context, setDialogState) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: _buildGlassCard(
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Text(
+                      "Edit Save Entry",
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF0077B6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    // Date Picker
+                    GestureDetector(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: Color(0xFF0077B6),
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: Color(0xFF0077B6),
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            selectedDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              color: Color(0xFF0077B6),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF0077B6),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Color(0xFF0077B6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Amount (MMK)",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: noteController,
+                        decoration: const InputDecoration(
+                          labelText: "Note",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF87CEEB),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              if (amountController.text.isEmpty) {
+                                showMessage(
+                                  AppLocalizations.t('please_enter_amount'),
+                                  isError: true,
+                                );
+                                return;
+                              }
+                              Map body = {
+                                "id": itemId,
+                                "date": selectedDate.toString().substring(
+                                  0,
+                                  10,
+                                ),
+                                "type": 'save',
+                                "amount": amountController.text,
+                                "note": noteController.text,
+                              };
+                              Navigator.pop(ctx);
+                              updateTransaction(body);
+                            },
+                            child: const Text("Update"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     final TextEditingController amountController = TextEditingController(
       text: item['amount']?.toString() ?? '',
     );
@@ -2000,6 +2223,183 @@ class TransactionsTabState extends State<TransactionsTab> {
   }
 
   void showAddForm() {
+    if (widget.forcedType == 'save') {
+      final TextEditingController amountController = TextEditingController();
+      final TextEditingController noteController = TextEditingController();
+      DateTime selectedDate = DateTime.now();
+
+      showDialog(
+        context: context,
+        builder: (ctx) => StatefulBuilder(
+          builder: (context, setDialogState) => Dialog(
+            backgroundColor: Colors.transparent,
+            child: _buildGlassCard(
+              padding: const EdgeInsets.all(20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      AppLocalizations.t('save_money'),
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF0077B6),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    // Date Picker
+                    GestureDetector(
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: const ColorScheme.light(
+                                  primary: Color(0xFF0077B6),
+                                  onPrimary: Colors.white,
+                                  surface: Colors.white,
+                                  onSurface: Color(0xFF0077B6),
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (picked != null) {
+                          setDialogState(() {
+                            selectedDate = picked;
+                          });
+                        }
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 14,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.5),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.calendar_today,
+                              color: Color(0xFF0077B6),
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Color(0xFF0077B6),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            const Spacer(),
+                            const Icon(
+                              Icons.arrow_drop_down,
+                              color: Color(0xFF0077B6),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: amountController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Amount (MMK)",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: TextField(
+                        controller: noteController,
+                        decoration: const InputDecoration(
+                          labelText: "Note",
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text(
+                              "Cancel",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF87CEEB),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              if (amountController.text.isEmpty) {
+                                showMessage(
+                                  AppLocalizations.t('please_enter_amount'),
+                                  isError: true,
+                                );
+                                return;
+                              }
+                              Map body = {
+                                "date": selectedDate.toString().substring(
+                                  0,
+                                  10,
+                                ),
+                                "type": 'save',
+                                "amount": amountController.text,
+                                "note": noteController.text,
+                              };
+                              Navigator.pop(ctx);
+                              addTransaction(body);
+                            },
+                            child: const Text("Add"),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
+    }
     final TextEditingController amountController = TextEditingController();
     final TextEditingController noteController = TextEditingController();
     String selectedType = 'expense';
@@ -2170,13 +2570,6 @@ class TransactionsTabState extends State<TransactionsTab> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    loadData();
-    _startAutoRefresh();
-  }
-
-  @override
   void dispose() {
     _autoRefreshTimer?.cancel();
     super.dispose();
@@ -2274,7 +2667,17 @@ class TransactionsTabState extends State<TransactionsTab> {
         bool monthMatch =
             date.month.toString() == selectedMonth &&
             date.year.toString() == selectedYear;
-        bool typeMatch = selectedType == 'all' || item['type'] == selectedType;
+        bool typeMatch;
+        if (widget.forcedType != null) {
+          typeMatch = item['type'] == widget.forcedType;
+        } else {
+          if (selectedType == 'all') {
+            // exclude save entries from normal transactions list
+            typeMatch = item['type'] != 'save';
+          } else {
+            typeMatch = item['type'] == selectedType;
+          }
+        }
         return monthMatch && typeMatch;
       } catch (_) {
         return false;
@@ -2321,7 +2724,9 @@ class TransactionsTabState extends State<TransactionsTab> {
           ),
         ),
         title: Text(
-          AppLocalizations.t('all_transactions'),
+          widget.forcedType == 'save'
+              ? AppLocalizations.t('saved_transactions')
+              : AppLocalizations.t('all_transactions'),
           style: const TextStyle(color: Colors.white),
         ),
       ),
@@ -2446,29 +2851,31 @@ class TransactionsTabState extends State<TransactionsTab> {
                       _buildGlassCard(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: selectedType,
-                            isExpanded: true,
-                            dropdownColor: const Color(0xFFE0F7FA),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'all',
-                                child: Text('All Types'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'income',
-                                child: Text('Income'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'expense',
-                                child: Text('Expense'),
-                              ),
-                            ],
-                            onChanged: (v) {
-                              selectedType = v!;
-                              setState(() {});
-                            },
-                          ),
+                          child: widget.forcedType == null
+                              ? DropdownButton<String>(
+                                  value: selectedType,
+                                  isExpanded: true,
+                                  dropdownColor: const Color(0xFFE0F7FA),
+                                  items: const [
+                                    DropdownMenuItem(
+                                      value: 'all',
+                                      child: Text('All Types'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'income',
+                                      child: Text('Income'),
+                                    ),
+                                    DropdownMenuItem(
+                                      value: 'expense',
+                                      child: Text('Expense'),
+                                    ),
+                                  ],
+                                  onChanged: (v) {
+                                    selectedType = v!;
+                                    setState(() {});
+                                  },
+                                )
+                              : const SizedBox.shrink(),
                         ),
                       ),
                     ],
@@ -2480,7 +2887,9 @@ class TransactionsTabState extends State<TransactionsTab> {
                 child: Row(
                   children: [
                     Text(
-                      AppLocalizations.t('transactions'),
+                      widget.forcedType == 'save'
+                          ? AppLocalizations.t('saved_transactions')
+                          : AppLocalizations.t('transactions'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -2555,7 +2964,8 @@ class TransactionsTabState extends State<TransactionsTab> {
                                     child: _buildGlassCard(
                                       padding: const EdgeInsets.all(12),
                                       child: InkWell(
-                                        onTap: () => showTransactionDetail(item),
+                                        onTap: () =>
+                                            showTransactionDetail(item),
                                         borderRadius: BorderRadius.circular(16),
                                         child: Row(
                                           children: [
@@ -2587,7 +2997,8 @@ class TransactionsTabState extends State<TransactionsTab> {
                                                   Text(
                                                     item['category'] ?? '',
                                                     style: const TextStyle(
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                       color: Color(0xFF0077B6),
                                                       fontSize: 14,
                                                     ),
@@ -2662,16 +3073,16 @@ class TransactionsTabState extends State<TransactionsTab> {
                                                             color: Colors.white,
                                                           ),
                                                         ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ],
+                                                      ),
+                                                    ],
+                                                  ),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
-                                    )
                                   );
                                 },
                               ),
