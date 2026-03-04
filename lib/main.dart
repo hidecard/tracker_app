@@ -64,44 +64,111 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primaryColor: const Color(0xFF87CEEB),
-        scaffoldBackgroundColor: const Color(0xFFE0F7FA),
+        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF87CEEB),
+          seedColor: const Color(0xFF0077B6),
           brightness: Brightness.light,
+          primary: const Color(0xFF0077B6),
+          secondary: const Color(0xFF87CEEB),
+          surface: Colors.white,
+          onPrimary: Colors.white,
+          onSecondary: const Color(0xFF0077B6),
+          onSurface: const Color(0xFF333333),
         ),
+        scaffoldBackgroundColor: const Color(0xFFF5F9FC),
         appBarTheme: const AppBarTheme(
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
           titleTextStyle: TextStyle(
-            color: Color(0xFF0077B6),
+            color: Colors.white,
             fontWeight: FontWeight.bold,
             fontSize: 20,
           ),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         floatingActionButtonTheme: FloatingActionButtonThemeData(
-          backgroundColor: const Color(0xFF87CEEB),
-          elevation: 8,
+          backgroundColor: const Color(0xFF0077B6),
+          foregroundColor: Colors.white,
+          elevation: 4,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
-        bottomNavigationBarTheme: BottomNavigationBarThemeData(
-          backgroundColor: Colors.white.withOpacity(0.3),
-          elevation: 0,
-          selectedItemColor: const Color(0xFF0077B6),
-          unselectedItemColor: Colors.grey[600],
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
+        bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+          backgroundColor: Colors.white,
+          elevation: 8,
+          selectedItemColor: Color(0xFF0077B6),
+          unselectedItemColor: Colors.grey,
+          type: BottomNavigationBarType.fixed,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+        ),
+        cardTheme: CardThemeData(
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          color: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF0077B6),
+            foregroundColor: Colors.white,
+            elevation: 2,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        ),
+        textButtonTheme: TextButtonThemeData(
+          style: TextButton.styleFrom(foregroundColor: const Color(0xFF0077B6)),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.grey[50],
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(color: Colors.grey[200]!),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: const BorderSide(color: Color(0xFF0077B6), width: 2),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 14,
+          ),
         ),
         textTheme: const TextTheme(
+          headlineLarge: TextStyle(
+            color: Color(0xFF0077B6),
+            fontWeight: FontWeight.bold,
+            fontSize: 28,
+          ),
+          headlineMedium: TextStyle(
+            color: Color(0xFF0077B6),
+            fontWeight: FontWeight.bold,
+            fontSize: 24,
+          ),
           titleLarge: TextStyle(
             color: Color(0xFF0077B6),
             fontWeight: FontWeight.bold,
             fontSize: 18,
           ),
-          bodyMedium: TextStyle(color: Color(0xFF333333), fontSize: 14),
+          titleMedium: TextStyle(
+            color: Color(0xFF333333),
+            fontWeight: FontWeight.w600,
+            fontSize: 16,
+          ),
+          bodyLarge: TextStyle(color: Color(0xFF333333), fontSize: 16),
+          bodyMedium: TextStyle(color: Color(0xFF666666), fontSize: 14),
+          bodySmall: TextStyle(color: Color(0xFF999999), fontSize: 12),
         ),
       ),
       home: const MainScreen(),
@@ -148,71 +215,49 @@ class MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _pages[_currentIndex],
-      extendBody: true,
       bottomNavigationBar: _buildBottomNavigation(),
     );
   }
 
   Widget _buildBottomNavigation() {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF87CEEB).withOpacity(0.3),
+            color: const Color(0xFF0077B6).withOpacity(0.1),
             blurRadius: 20,
-            offset: const Offset(0, 10),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.white.withOpacity(0.4),
-                Colors.white.withOpacity(0.3),
-              ],
-            ),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.4),
-              width: 1.5,
-            ),
-          ),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildNavItem(0, Icons.home_outlined, Icons.home, ''),
-                  _buildNavItem(
-                    1,
-                    Icons.receipt_long_outlined,
-                    Icons.receipt_long,
-                    '',
-                  ),
-                  _buildCenterAddButton(context),
-                  _buildNavItem(
-                    2,
-                    Icons.insert_chart_outlined,
-                    Icons.insert_chart,
-                    '',
-                  ),
-                  _buildNavItem(
-                    3,
-                    Icons.savings_outlined,
-                    Icons.savings,
-                    '',
-                  ),
-                ],
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+              _buildNavItem(
+                1,
+                Icons.receipt_long_outlined,
+                Icons.receipt_long_rounded,
+                'Transactions',
               ),
-            ),
+              _buildCenterAddButton(context),
+              _buildNavItem(
+                2,
+                Icons.pie_chart_outline_rounded,
+                Icons.pie_chart_rounded,
+                'Summary',
+              ),
+              _buildNavItem(
+                3,
+                Icons.savings_outlined,
+                Icons.savings_rounded,
+                'Save',
+              ),
+            ],
           ),
         ),
       ),
@@ -223,55 +268,41 @@ class MainScreenState extends State<MainScreen> {
     int index,
     IconData icon,
     IconData activeIcon,
-    String labelKey,
+    String label,
   ) {
     bool isSelected = _currentIndex == index;
-    final label = AppLocalizations.t(labelKey);
-    return GestureDetector(
+    return InkWell(
       onTap: () => setCurrentIndex(index),
+      borderRadius: BorderRadius.circular(16),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 200),
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
-          vertical: 10,
+          horizontal: isSelected ? 16 : 12,
+          vertical: 8,
         ),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: isSelected
-              ? const Color(0xFF87CEEB).withOpacity(0.2)
+              ? const Color(0xFF0077B6).withOpacity(0.1)
               : Colors.transparent,
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: const Color(0xFF87CEEB).withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
-          border: isSelected
-              ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
-              : null,
         ),
-        child: Row(
+        child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? const Color(0xFF0077B6) : Colors.grey[600],
-              size: isSelected ? 28 : 24,
+              color: isSelected ? const Color(0xFF0077B6) : Colors.grey[500],
+              size: 24,
             ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF0077B6),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF0077B6) : Colors.grey[500],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                fontSize: 11,
               ),
-            ],
+            ),
           ],
         ),
       ),
@@ -294,8 +325,8 @@ class MainScreenState extends State<MainScreen> {
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF0077B6).withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
             ),
           ],
         ),

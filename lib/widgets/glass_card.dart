@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
 class GlassCard extends StatelessWidget {
@@ -29,14 +28,14 @@ class GlassCard extends StatelessWidget {
         width: width,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(borderRadius),
-          color: backgroundColor ?? Colors.white.withOpacity(0.3),
+          color: backgroundColor ?? Colors.white,
           border: Border.all(
-            color: borderColor ?? Colors.white.withOpacity(0.4),
-            width: 1.5,
+            color: borderColor ?? Colors.grey[200]!,
+            width: 1,
           ),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFF87CEEB).withOpacity(0.1),
+              color: Colors.black.withOpacity(0.05),
               blurRadius: 10,
               spreadRadius: 2,
               offset: const Offset(0, 4),
@@ -80,8 +79,7 @@ class GradientCard extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: gradientColors,
         ),
-        boxShadow:
-            boxShadow ??
+        boxShadow: boxShadow ??
             [
               BoxShadow(
                 color: gradientColors.first.withOpacity(0.3),
@@ -100,32 +98,40 @@ class GradientCard extends StatelessWidget {
   }
 }
 
-class BlurredContainer extends StatelessWidget {
+class ModernCard extends StatelessWidget {
   final Widget child;
   final EdgeInsets? padding;
   final double borderRadius;
   final Color? backgroundColor;
+  final VoidCallback? onTap;
 
-  const BlurredContainer({
+  const ModernCard({
     super.key,
     required this.child,
     this.padding,
-    this.borderRadius = 24,
+    this.borderRadius = 16,
     this.backgroundColor,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
-        color: backgroundColor ?? Colors.white.withOpacity(0.3),
-        border: Border.all(color: Colors.white.withOpacity(0.4), width: 1.5),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
+          color: backgroundColor ?? Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.08),
+              blurRadius: 15,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
           child: padding != null
               ? Padding(padding: padding!, child: child)
               : child,
@@ -134,3 +140,4 @@ class BlurredContainer extends StatelessWidget {
     );
   }
 }
+

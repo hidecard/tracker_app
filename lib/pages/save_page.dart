@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../widgets/glass_card.dart';
 import '../widgets/common_components.dart';
 
 class SavePage extends StatefulWidget {
@@ -48,7 +47,7 @@ class SavePageState extends State<SavePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? Colors.red : const Color(0xFF87CEEB),
+        backgroundColor: isError ? Colors.red[400] : const Color(0xFF0077B6),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -104,46 +103,59 @@ class SavePageState extends State<SavePage> {
     final TextEditingController noteController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Save Money',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildDatePicker(
-                    selectedDate,
-                    setDialogState,
-                    (date) => setDialogState(() => selectedDate = date),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Save Money',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildDialogButtons(
-                    ctx,
-                    amountController,
-                    noteController,
-                    selectedDate,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildDatePickerNew(selectedDate, setDialogState, (date) {
+                  setDialogState(() => selectedDate = date);
+                }),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildDialogButtons(
+                  ctx,
+                  amountController,
+                  noteController,
+                  selectedDate,
+                ),
+              ],
             ),
           ),
         ),
@@ -151,7 +163,7 @@ class SavePageState extends State<SavePage> {
     );
   }
 
-  Widget _buildDatePicker(
+  Widget _buildDatePickerNew(
     DateTime selectedDate,
     StateSetter setDialogState,
     Function(DateTime) onDateSelected,
@@ -179,8 +191,13 @@ class SavePageState extends State<SavePage> {
         );
         if (picked != null) onDateSelected(picked);
       },
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
         child: Row(
           children: [
             const Icon(
@@ -205,31 +222,33 @@ class SavePageState extends State<SavePage> {
     );
   }
 
-  Widget _buildAmountField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: "Amount (MMK)",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.attach_money, color: Color(0xFF0077B6)),
-        ),
+  Widget _buildAmountFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF0077B6),
+      ),
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        hintText: '0',
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 24),
+        labelText: 'Amount (MMK)',
+        labelStyle: const TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF0077B6)),
       ),
     );
   }
 
-  Widget _buildNoteField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: "Note",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
-        ),
+  Widget _buildNoteFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: const InputDecoration(
+        labelText: 'Note (optional)',
+        labelStyle: TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
       ),
     );
   }
@@ -243,20 +262,27 @@ class SavePageState extends State<SavePage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -273,7 +299,10 @@ class SavePageState extends State<SavePage> {
               Navigator.pop(ctx);
               addTransaction(body);
             },
-            child: const Text("Add"),
+            child: const Text(
+              "Add",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -294,59 +323,56 @@ class SavePageState extends State<SavePage> {
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            const SizedBox(height: 12),
             Container(
               width: 40,
               height: 4,
-              margin: const EdgeInsets.only(top: 12),
               decoration: BoxDecoration(
                 color: Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.blue[50],
+                color: Colors.blue.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(Icons.savings, color: Colors.blue[700], size: 32),
+              child: const Icon(Icons.savings, color: Colors.blue, size: 40),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             const Text(
               'Save Money',
               style: TextStyle(
-                fontSize: 20,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF0077B6),
               ),
             ),
+            const SizedBox(height: 8),
             Text(
               '-${formatMMK(amountValue)}',
-              style: TextStyle(
-                fontSize: 28,
+              style: const TextStyle(
+                fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Colors.blue[700],
+                color: Colors.blue,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             _buildDetailRow(Icons.calendar_today, 'Date', dateText),
-            _buildDetailRow(
-              Icons.attach_money,
-              'Amount',
-              formatMMK(amountValue),
-            ),
+            _buildDetailRow(Icons.money, 'Amount', formatMMK(amountValue)),
             _buildDetailRow(
               Icons.note,
               'Note',
               noteText.isEmpty ? 'No note' : noteText,
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -354,9 +380,9 @@ class SavePageState extends State<SavePage> {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF87CEEB),
+                        backgroundColor: const Color(0xFF0077B6),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -373,9 +399,9 @@ class SavePageState extends State<SavePage> {
                   Expanded(
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
+                        backgroundColor: Colors.red[400],
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -403,15 +429,15 @@ class SavePageState extends State<SavePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF87CEEB)),
+          Icon(icon, size: 20, color: const Color(0xFF0077B6)),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(color: Colors.grey[600])),
           const Spacer(),
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF0077B6),
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF333333),
             ),
           ),
         ],
@@ -423,6 +449,7 @@ class SavePageState extends State<SavePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Save Record'),
         content: const Text(
           'Are you sure you want to delete this save record?',
@@ -433,7 +460,7 @@ class SavePageState extends State<SavePage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
             onPressed: () {
               Navigator.pop(ctx);
               deleteTransaction(id);
@@ -459,47 +486,62 @@ class SavePageState extends State<SavePage> {
       selectedDate = DateTime.now();
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Edit Save Entry',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildDatePicker(
-                    selectedDate,
-                    setDialogState,
-                    (date) => setDialogState(() => selectedDate = date),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Edit Save Entry',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildEditDialogButtons(
-                    ctx,
-                    item['id']?.toString() ?? '',
-                    amountController,
-                    noteController,
-                    selectedDate,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildDatePickerNew(
+                  selectedDate,
+                  setDialogState,
+                  (date) => setDialogState(() => selectedDate = date),
+                ),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildEditDialogButtons(
+                  ctx,
+                  item['id']?.toString() ?? '',
+                  amountController,
+                  noteController,
+                  selectedDate,
+                ),
+              ],
             ),
           ),
         ),
@@ -517,20 +559,27 @@ class SavePageState extends State<SavePage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -548,7 +597,10 @@ class SavePageState extends State<SavePage> {
               Navigator.pop(ctx);
               updateTransaction(body);
             },
-            child: const Text("Update"),
+            child: const Text(
+              "Update",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -682,22 +734,107 @@ class SavePageState extends State<SavePage> {
     );
 
     return Scaffold(
-      appBar: _buildAppBar(),
-      extendBody: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE0F7FA), Color(0xFFB2EBF2), Color(0xFF80DEEA)],
+      backgroundColor: const Color(0xFFF5F9FC),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(years),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _buildSavedHeader(),
+            ),
+          ),
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF0077B6)),
+              ),
+            )
+          else if (filteredData.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.savings_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No saved records',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Start saving money to see your records here',
+                      style: TextStyle(color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index == filteredData.length) return _buildTotalCard();
+                  return _buildSaveItem(filteredData[index]);
+                }, childCount: filteredData.length + 1),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(List<String> years) {
+    return SliverAppBar(
+      expandedHeight: 140,
+      floating: false,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Saved Records',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
           ),
         ),
-        child: SafeArea(
-          child: Column(
+      ),
+      actions: [
+        IconButton(
+          onPressed: _pullToRefresh,
+          icon: isRefreshing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.refresh, color: Colors.white),
+        ),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              _buildHeader(years),
-              _buildSavedHeader(),
-              Expanded(child: _buildSavedList()),
+              Expanded(child: _buildYearDropdown(years)),
+              const SizedBox(width: 12),
+              Expanded(flex: 2, child: _buildMonthDropdown()),
             ],
           ),
         ),
@@ -705,84 +842,35 @@ class SavePageState extends State<SavePage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
-          ),
-        ),
-      ),
-      title: const Text('Saved Records', style: TextStyle(color: Colors.white)),
-    );
-  }
-
-  Widget _buildHeader(List<String> years) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    "Save Records",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _pullToRefresh,
-                  icon: isRefreshing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF0077B6),
-                          ),
-                        )
-                      : const Icon(Icons.refresh, color: Color(0xFF0077B6)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildYearDropdown(years)),
-                const SizedBox(width: 8),
-                Expanded(flex: 2, child: _buildMonthDropdown()),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildYearDropdown(List<String> years) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedYear,
           isExpanded: true,
-          dropdownColor: const Color(0xFFE0F7FA),
+          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           items: years
               .map(
                 (y) => DropdownMenuItem(
                   value: y,
                   child: Text(
                     y,
-                    style: const TextStyle(color: Color(0xFF0077B6)),
+                    style: const TextStyle(
+                      color: Color(0xFF0077B6),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               )
@@ -797,20 +885,34 @@ class SavePageState extends State<SavePage> {
   }
 
   Widget _buildMonthDropdown() {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedMonth,
           isExpanded: true,
-          dropdownColor: const Color(0xFFE0F7FA),
+          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           items: List.generate(
             12,
             (i) => DropdownMenuItem(
               value: (i + 1).toString(),
               child: Text(
                 monthNames[i],
-                style: const TextStyle(color: Color(0xFF0077B6)),
+                style: const TextStyle(
+                  color: Color(0xFF0077B6),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ).toList(),
@@ -824,103 +926,87 @@ class SavePageState extends State<SavePage> {
   }
 
   Widget _buildSavedHeader() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          const Text(
-            'Saved Records',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        const Text(
+          'Saved Records',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0077B6),
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0077B6).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${filteredData.length}',
+            style: const TextStyle(
               color: Color(0xFF0077B6),
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          AppBadge(text: '${filteredData.length}'),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _pullToRefresh,
-            icon: isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFF0077B6),
-                    ),
-                  )
-                : const Icon(Icons.refresh, color: Color(0xFF0077B6)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSavedList() {
-    if (isLoading) return const LoadingIndicator();
-    return RefreshIndicator(
-      onRefresh: _pullToRefresh,
-      color: const Color(0xFF87CEEB),
-      child: filteredData.isEmpty
-          ? const EmptyState(
-              icon: Icons.savings_outlined,
-              title: 'No saved records',
-              subtitle: 'Start saving money to see your records here',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filteredData.length + 1,
-              itemBuilder: (context, index) {
-                if (index == filteredData.length) return _buildTotalCard();
-                return _buildSaveItem(filteredData[index]);
-              },
-            ),
+        ),
+      ],
     );
   }
 
   Widget _buildTotalCard() {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 16),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.blue[50],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(Icons.savings, color: Colors.blue[700], size: 24),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Total Saved',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF0077B6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Text(
-                      formatMMK(totalSaved),
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.blue[700],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
           ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0077B6).withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Icon(Icons.savings, color: Colors.white, size: 32),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Total Saved',
+                    style: TextStyle(color: Colors.white70, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatMMK(totalSaved),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -931,63 +1017,78 @@ class SavePageState extends State<SavePage> {
     double amountValue =
         double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: GlassCard(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
         onTap: () => showTransactionDetail(item),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.blue[50],
-                borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(Icons.savings, color: Colors.blue[700], size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Save Money',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0077B6),
-                      fontSize: 14,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.savings, color: Colors.blue, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Save Money',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  Text(
-                    noteText.isNotEmpty
-                        ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
-                        : (item['date'] ?? ''),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      noteText.isNotEmpty
+                          ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
+                          : (item['date'] ?? ''),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              '-${formatMMK(amountValue)}',
-              style: TextStyle(
-                color: Colors.blue[700],
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              Text(
+                '-${formatMMK(amountValue)}',
+                style: const TextStyle(
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 20,
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: Colors.red[300],
+                  size: 20,
+                ),
+                onPressed: () =>
+                    showDeleteConfirmation(item['id']?.toString() ?? ''),
               ),
-              onPressed: () =>
-                  showDeleteConfirmation(item['id']?.toString() ?? ''),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

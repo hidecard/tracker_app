@@ -31,7 +31,7 @@ class AppButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? const Color(0xFF87CEEB),
+          backgroundColor: backgroundColor ?? const Color(0xFF0077B6),
           foregroundColor: textColor ?? Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -99,8 +99,12 @@ class AppTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
       child: TextFormField(
         controller: controller,
         keyboardType: keyboardType,
@@ -112,6 +116,7 @@ class AppTextField extends StatelessWidget {
           labelText: labelText,
           hintText: hintText,
           border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           prefixIcon: prefixIcon != null
               ? Icon(prefixIcon, color: const Color(0xFF0077B6), size: 20)
               : null,
@@ -145,8 +150,13 @@ class AppDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GlassCard(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
       child: DropdownButtonFormField<T>(
         value: value,
         items: items,
@@ -158,7 +168,7 @@ class AppDropdown<T> extends StatelessWidget {
               ? Icon(prefixIcon, color: const Color(0xFF0077B6), size: 20)
               : null,
         ),
-        dropdownColor: const Color(0xFFE0F7FA),
+        dropdownColor: Colors.white,
         isExpanded: true,
       ),
     );
@@ -208,122 +218,26 @@ class AppDatePicker extends StatelessWidget {
           onDateSelected(picked);
         }
       },
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
         child: Row(
           children: [
-            const Icon(
-              Icons.calendar_today,
-              color: Color(0xFF0077B6),
-              size: 20,
-            ),
+            const Icon(Icons.calendar_today, color: Color(0xFF0077B6), size: 20),
             const SizedBox(width: 12),
             Text(
               "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-              style: const TextStyle(
-                fontSize: 16,
-                color: Color(0xFF0077B6),
-                fontWeight: FontWeight.w500,
-              ),
+              style: const TextStyle(fontSize: 16, color: Color(0xFF0077B6), fontWeight: FontWeight.w500),
             ),
             const Spacer(),
             const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           ],
         ),
       ),
-    );
-  }
-}
-
-class MonthYearSelector extends StatelessWidget {
-  final String selectedMonth;
-  final String selectedYear;
-  final void Function(String month, String year) onChanged;
-  final List<String> years;
-  final List<String> monthNames;
-
-  const MonthYearSelector({
-    super.key,
-    required this.selectedMonth,
-    required this.selectedYear,
-    required this.onChanged,
-    required this.years,
-    required this.monthNames,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedYear,
-                isExpanded: true,
-                dropdownColor: const Color(0xFFE0F7FA),
-                icon: const Icon(
-                  Icons.calendar_today,
-                  color: Color(0xFF0077B6),
-                  size: 18,
-                ),
-                items: years
-                    .map(
-                      (y) => DropdownMenuItem(
-                        value: y,
-                        child: Text(
-                          y,
-                          style: const TextStyle(
-                            color: Color(0xFF0077B6),
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (v) {
-                  if (v != null) onChanged(selectedMonth, v);
-                },
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          flex: 2,
-          child: GlassCard(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                value: selectedMonth,
-                isExpanded: true,
-                dropdownColor: const Color(0xFFE0F7FA),
-                icon: const Icon(
-                  Icons.arrow_drop_down,
-                  color: Color(0xFF0077B6),
-                ),
-                items: List.generate(
-                  12,
-                  (i) => DropdownMenuItem(
-                    value: (i + 1).toString(),
-                    child: Text(
-                      monthNames[i],
-                      style: const TextStyle(
-                        color: Color(0xFF0077B6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                ),
-                onChanged: (v) {
-                  if (v != null) onChanged(v, selectedYear);
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
@@ -350,28 +264,16 @@ class EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 64,
-              color: const Color(0xFF0077B6).withOpacity(0.5),
-            ),
+            Icon(icon, size: 64, color: Colors.grey[400]),
             const SizedBox(height: 16),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFF0077B6),
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600, color: Color(0xFF0077B6)),
               textAlign: TextAlign.center,
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
-              Text(
-                subtitle!,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                textAlign: TextAlign.center,
-              ),
+              Text(subtitle!, style: TextStyle(fontSize: 14, color: Colors.grey[600]), textAlign: TextAlign.center),
             ],
             if (action != null) ...[const SizedBox(height: 24), action!],
           ],
@@ -392,13 +294,10 @@ class LoadingIndicator extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const CircularProgressIndicator(color: Color(0xFF87CEEB)),
+          const CircularProgressIndicator(color: Color(0xFF0077B6)),
           if (message != null) ...[
             const SizedBox(height: 16),
-            Text(
-              message!,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-            ),
+            Text(message!, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
           ],
         ],
       ),
@@ -424,14 +323,7 @@ class SectionHeader extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF0077B6),
-            ),
-          ),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF0077B6))),
           if (trailing != null) ...[const Spacer(), trailing!],
         ],
       ),
@@ -456,17 +348,18 @@ class AppBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: backgroundColor ?? const Color(0xFF87CEEB).withOpacity(0.3),
+        color: backgroundColor ?? const Color(0xFF0077B6).withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
         text,
         style: TextStyle(
           color: textColor ?? const Color(0xFF0077B6),
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           fontSize: 12,
         ),
       ),
     );
   }
 }
+

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import '../widgets/glass_card.dart';
 import '../widgets/common_components.dart';
 
 class TransactionsPage extends StatefulWidget {
@@ -50,7 +49,7 @@ class TransactionsPageState extends State<TransactionsPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? Colors.red : const Color(0xFF87CEEB),
+        backgroundColor: isError ? Colors.red[400] : const Color(0xFF0077B6),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -114,45 +113,60 @@ class TransactionsPageState extends State<TransactionsPage> {
     final TextEditingController noteController = TextEditingController();
     DateTime selectedDate = DateTime.now();
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Save Money',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildDatePicker(selectedDate, setDialogState, (date) {
-                    setDialogState(() => selectedDate = date);
-                  }),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildDialogButtons(
-                    ctx,
-                    amountController,
-                    noteController,
-                    selectedDate,
-                    isSave: true,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Save Money',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildDatePickerNew(selectedDate, setDialogState, (date) {
+                  setDialogState(() => selectedDate = date);
+                }),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildDialogButtons(
+                  ctx,
+                  amountController,
+                  noteController,
+                  selectedDate,
+                  isSave: true,
+                ),
+              ],
             ),
           ),
         ),
@@ -166,54 +180,69 @@ class TransactionsPageState extends State<TransactionsPage> {
     String selectedType = 'expense';
     String selectedCategory = 'Food';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Add Transaction',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildTypeDropdown(
-                    setDialogState,
-                    selectedType,
-                    (v) => setDialogState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Add Transaction',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildCategoryDropdown(
-                    setDialogState,
-                    selectedCategory,
-                    (v) => setDialogState(() => selectedCategory = v!),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildDialogButtons(
-                    ctx,
-                    amountController,
-                    noteController,
-                    DateTime.now(),
-                    selectedType: selectedType,
-                    selectedCategory: selectedCategory,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildTypeSelectorNew(
+                  setDialogState,
+                  selectedType,
+                  (v) => setDialogState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 16),
+                _buildCategorySelectorNew(
+                  setDialogState,
+                  selectedCategory,
+                  (v) => setDialogState(() => selectedCategory = v!),
+                ),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildDialogButtons(
+                  ctx,
+                  amountController,
+                  noteController,
+                  DateTime.now(),
+                  selectedType: selectedType,
+                  selectedCategory: selectedCategory,
+                ),
+              ],
             ),
           ),
         ),
@@ -221,7 +250,7 @@ class TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  Widget _buildDatePicker(
+  Widget _buildDatePickerNew(
     DateTime selectedDate,
     StateSetter setDialogState,
     Function(DateTime) onDateSelected,
@@ -247,12 +276,15 @@ class TransactionsPageState extends State<TransactionsPage> {
             );
           },
         );
-        if (picked != null) {
-          onDateSelected(picked);
-        }
+        if (picked != null) onDateSelected(picked);
       },
-      child: GlassCard(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF5F9FC),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[300]!),
+        ),
         child: Row(
           children: [
             const Icon(
@@ -277,84 +309,152 @@ class TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  Widget _buildTypeDropdown(
+  Widget _buildTypeSelectorNew(
     StateSetter setDialogState,
     String selectedType,
     Function(String?) onChanged,
   ) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonFormField<String>(
-        value: selectedType,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        dropdownColor: const Color(0xFFE0F7FA),
-        items: const [
-          DropdownMenuItem(value: "income", child: Text("Income")),
-          DropdownMenuItem(value: "expense", child: Text("Expense")),
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTypeOption(
+              'expense',
+              'Expense',
+              Icons.arrow_upward,
+              Colors.red[400]!,
+              selectedType == 'expense',
+              () => onChanged('expense'),
+            ),
+          ),
+          Expanded(
+            child: _buildTypeOption(
+              'income',
+              'Income',
+              Icons.arrow_downward,
+              Colors.green[400]!,
+              selectedType == 'income',
+              () => onChanged('income'),
+            ),
+          ),
         ],
-        onChanged: onChanged,
       ),
     );
   }
 
-  Widget _buildCategoryDropdown(
+  Widget _buildTypeOption(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySelectorNew(
     StateSetter setDialogState,
     String selectedCategory,
     Function(String?) onChanged,
   ) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonFormField<String>(
-        value: selectedCategory,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        dropdownColor: const Color(0xFFE0F7FA),
-        items: [
-          "Food",
-          "Rent",
-          "Bill",
-          "Shopping",
-          "Transport",
-          "Entertainment",
-          "Health",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
+    final categories = [
+      'Food',
+      'Rent',
+      'Bill',
+      'Shopping',
+      'Transport',
+      'Entertainment',
+      'Health',
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: categories.map((cat) {
+        bool isSelected = selectedCategory == cat;
+        return GestureDetector(
+          onTap: () => onChanged(cat),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? const Color(0xFF0077B6)
+                  : const Color(0xFFF5F9FC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF0077B6) : Colors.grey[300]!,
+              ),
+            ),
+            child: Text(
+              cat,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildAmountFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF0077B6),
+      ),
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        hintText: '0',
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 24),
+        labelText: 'Amount (MMK)',
+        labelStyle: const TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF0077B6)),
       ),
     );
   }
 
-  Widget _buildAmountField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: "Amount (MMK)",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.attach_money, color: Color(0xFF0077B6)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNoteField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: "Note",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
-        ),
+  Widget _buildNoteFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: const InputDecoration(
+        labelText: 'Note (optional)',
+        labelStyle: TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
       ),
     );
   }
@@ -371,20 +471,27 @@ class TransactionsPageState extends State<TransactionsPage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -402,7 +509,10 @@ class TransactionsPageState extends State<TransactionsPage> {
               Navigator.pop(ctx);
               addTransaction(body);
             },
-            child: const Text("Add"),
+            child: const Text(
+              "Add",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -419,6 +529,10 @@ class TransactionsPageState extends State<TransactionsPage> {
     double amountValue =
         double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
 
+    Color accentColor = isSave
+        ? Colors.blue
+        : (isIncome ? Colors.green : Colors.red);
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -427,18 +541,54 @@ class TransactionsPageState extends State<TransactionsPage> {
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDetailHandle(),
-            const SizedBox(height: 20),
-            _buildDetailIcon(isSave, isIncome),
             const SizedBox(height: 12),
-            _buildDetailTitle(categoryText, isSave),
-            _buildDetailAmount(amountValue, isSave, isIncome),
-            const SizedBox(height: 20),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSave
+                    ? Icons.savings
+                    : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
+                color: accentColor,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              categoryText.isEmpty ? 'Save Money' : categoryText,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0077B6),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 24),
             _buildDetailRow(Icons.calendar_today, 'Date', dateText),
             _buildDetailRow(
               Icons.category,
@@ -446,7 +596,7 @@ class TransactionsPageState extends State<TransactionsPage> {
               categoryText.isEmpty ? '-' : categoryText,
             ),
             _buildDetailRow(
-              Icons.attach_money,
+              Icons.money,
               'Type',
               isSave ? 'Save' : (isIncome ? 'Income' : 'Expense'),
             ),
@@ -455,68 +605,54 @@ class TransactionsPageState extends State<TransactionsPage> {
               'Note',
               noteText.isEmpty ? 'No note' : noteText,
             ),
-            const SizedBox(height: 20),
-            _buildDetailActions(ctx, item),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0077B6),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showEditForm(item);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[400],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Delete'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showDeleteConfirmation(item['id']?.toString() ?? '');
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDetailHandle() {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-
-  Widget _buildDetailIcon(bool isSave, bool isIncome) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isSave
-            ? Colors.blue[50]
-            : (isIncome ? Colors.green[50] : Colors.red[50]),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        isSave
-            ? Icons.savings
-            : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
-        color: isSave
-            ? Colors.blue[700]
-            : (isIncome ? Colors.green[700] : Colors.red[700]),
-        size: 32,
-      ),
-    );
-  }
-
-  Widget _buildDetailTitle(String categoryText, bool isSave) {
-    return Text(
-      categoryText.isEmpty ? 'Save Money' : categoryText,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF0077B6),
-      ),
-    );
-  }
-
-  Widget _buildDetailAmount(double amountValue, bool isSave, bool isIncome) {
-    return Text(
-      '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-      style: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        color: isSave
-            ? Colors.blue[700]
-            : (isIncome ? Colors.green[700] : Colors.red[700]),
       ),
     );
   }
@@ -526,62 +662,15 @@ class TransactionsPageState extends State<TransactionsPage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF87CEEB)),
+          Icon(icon, size: 20, color: const Color(0xFF0077B6)),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(color: Colors.grey[600])),
           const Spacer(),
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF0077B6),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailActions(BuildContext ctx, Map<String, dynamic> item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF87CEEB),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit'),
-              onPressed: () {
-                Navigator.pop(ctx);
-                showEditForm(item);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.delete),
-              label: const Text('Delete'),
-              onPressed: () {
-                Navigator.pop(ctx);
-                showDeleteConfirmation(item['id']?.toString() ?? '');
-              },
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF333333),
             ),
           ),
         ],
@@ -593,6 +682,7 @@ class TransactionsPageState extends State<TransactionsPage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Transaction'),
         content: const Text(
           'Are you sure you want to delete this transaction?',
@@ -603,7 +693,7 @@ class TransactionsPageState extends State<TransactionsPage> {
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
             onPressed: () {
               Navigator.pop(ctx);
               deleteTransaction(id);
@@ -637,48 +727,63 @@ class TransactionsPageState extends State<TransactionsPage> {
       selectedDate = DateTime.now();
     }
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Edit Save Entry',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildDatePicker(
-                    selectedDate,
-                    setDialogState,
-                    (date) => setDialogState(() => selectedDate = date),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Edit Save Entry',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildEditDialogButtons(
-                    ctx,
-                    item['id']?.toString() ?? '',
-                    amountController,
-                    noteController,
-                    selectedDate,
-                    isSave: true,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildDatePickerNew(
+                  selectedDate,
+                  setDialogState,
+                  (date) => setDialogState(() => selectedDate = date),
+                ),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildEditDialogButtons(
+                  ctx,
+                  item['id']?.toString() ?? '',
+                  amountController,
+                  noteController,
+                  selectedDate,
+                  isSave: true,
+                ),
+              ],
             ),
           ),
         ),
@@ -696,55 +801,70 @@ class TransactionsPageState extends State<TransactionsPage> {
     String selectedType = item['type']?.toString() ?? 'expense';
     String selectedCategory = item['category']?.toString() ?? 'Food';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Edit Transaction',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildTypeDropdown(
-                    setDialogState,
-                    selectedType,
-                    (v) => setDialogState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Edit Transaction',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildCategoryDropdown(
-                    setDialogState,
-                    selectedCategory,
-                    (v) => setDialogState(() => selectedCategory = v!),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildEditDialogButtons(
-                    ctx,
-                    item['id']?.toString() ?? '',
-                    amountController,
-                    noteController,
-                    DateTime.now(),
-                    selectedType: selectedType,
-                    selectedCategory: selectedCategory,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildTypeSelectorNew(
+                  setDialogState,
+                  selectedType,
+                  (v) => setDialogState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 16),
+                _buildCategorySelectorNew(
+                  setDialogState,
+                  selectedCategory,
+                  (v) => setDialogState(() => selectedCategory = v!),
+                ),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildEditDialogButtons(
+                  ctx,
+                  item['id']?.toString() ?? '',
+                  amountController,
+                  noteController,
+                  DateTime.now(),
+                  selectedType: selectedType,
+                  selectedCategory: selectedCategory,
+                ),
+              ],
             ),
           ),
         ),
@@ -765,20 +885,27 @@ class TransactionsPageState extends State<TransactionsPage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -797,7 +924,10 @@ class TransactionsPageState extends State<TransactionsPage> {
               Navigator.pop(ctx);
               updateTransaction(body);
             },
-            child: const Text("Update"),
+            child: const Text(
+              "Update",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -934,22 +1064,116 @@ class TransactionsPageState extends State<TransactionsPage> {
     List filtered = filteredData;
 
     return Scaffold(
-      appBar: _buildAppBar(),
-      extendBody: true,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE0F7FA), Color(0xFFB2EBF2), Color(0xFF80DEEA)],
+      backgroundColor: const Color(0xFFF5F9FC),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(years),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  if (widget.forcedType == null) _buildTypeFilterDropdown(),
+                  const SizedBox(height: 12),
+                  _buildTransactionsHeader(filtered.length),
+                ],
+              ),
+            ),
+          ),
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF0077B6)),
+              ),
+            )
+          else if (filtered.isEmpty)
+            SliverFillRemaining(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.receipt_long_outlined,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No transactions found',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Add a new transaction to get started',
+                      style: TextStyle(color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index == filtered.length) return _buildSummaryCard();
+                  return _buildTransactionItem(filtered[index]);
+                }, childCount: filtered.length + 1),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSliverAppBar(List<String> years) {
+    return SliverAppBar(
+      expandedHeight: 140,
+      floating: false,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: Text(
+          widget.forcedType == 'save' ? 'Saved Records' : 'All Transactions',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
           ),
         ),
-        child: SafeArea(
-          child: Column(
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
+          ),
+        ),
+      ),
+      actions: [
+        IconButton(
+          onPressed: _pullToRefresh,
+          icon: isRefreshing
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.refresh, color: Colors.white),
+        ),
+      ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(60),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Row(
             children: [
-              _buildHeader(years),
-              _buildTransactionsHeader(filtered.length),
-              Expanded(child: _buildTransactionsList(filtered)),
+              Expanded(child: _buildYearDropdown(years)),
+              const SizedBox(width: 12),
+              Expanded(flex: 2, child: _buildMonthDropdown()),
             ],
           ),
         ),
@@ -957,89 +1181,35 @@ class TransactionsPageState extends State<TransactionsPage> {
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
-          ),
-        ),
-      ),
-      title: Text(
-        widget.forcedType == 'save' ? 'Saved Records' : 'All Transactions',
-        style: const TextStyle(color: Colors.white),
-      ),
-    );
-  }
-
-  Widget _buildHeader(List<String> years) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                const Expanded(
-                  child: Text(
-                    "All Transactions",
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
-                    ),
-                  ),
-                ),
-                IconButton(
-                  onPressed: _pullToRefresh,
-                  icon: isRefreshing
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Color(0xFF0077B6),
-                          ),
-                        )
-                      : const Icon(Icons.refresh, color: Color(0xFF0077B6)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildYearDropdown(years)),
-                const SizedBox(width: 8),
-                Expanded(flex: 2, child: _buildMonthDropdown()),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (widget.forcedType == null) _buildTypeFilterDropdown(),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildYearDropdown(List<String> years) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedYear,
           isExpanded: true,
-          dropdownColor: const Color(0xFFE0F7FA),
+          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           items: years
               .map(
                 (y) => DropdownMenuItem(
                   value: y,
                   child: Text(
                     y,
-                    style: const TextStyle(color: Color(0xFF0077B6)),
+                    style: const TextStyle(
+                      color: Color(0xFF0077B6),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               )
@@ -1054,20 +1224,34 @@ class TransactionsPageState extends State<TransactionsPage> {
   }
 
   Widget _buildMonthDropdown() {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedMonth,
           isExpanded: true,
-          dropdownColor: const Color(0xFFE0F7FA),
+          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           items: List.generate(
             12,
             (i) => DropdownMenuItem(
               value: (i + 1).toString(),
               child: Text(
                 monthNames[i],
-                style: const TextStyle(color: Color(0xFF0077B6)),
+                style: const TextStyle(
+                  color: Color(0xFF0077B6),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ).toList(),
@@ -1081,13 +1265,24 @@ class TransactionsPageState extends State<TransactionsPage> {
   }
 
   Widget _buildTypeFilterDropdown() {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: selectedType,
           isExpanded: true,
-          dropdownColor: const Color(0xFFE0F7FA),
+          icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
           items: const [
             DropdownMenuItem(value: 'all', child: Text('All Types')),
             DropdownMenuItem(value: 'income', child: Text('Income')),
@@ -1103,58 +1298,32 @@ class TransactionsPageState extends State<TransactionsPage> {
   }
 
   Widget _buildTransactionsHeader(int count) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(
-        children: [
-          Text(
-            widget.forcedType == 'save' ? 'Saved Records' : 'Transactions',
+    return Row(
+      children: [
+        Text(
+          widget.forcedType == 'save' ? 'Saved Records' : 'Transactions',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0077B6),
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0077B6).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '$count',
             style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
               color: Color(0xFF0077B6),
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          AppBadge(text: '$count'),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _pullToRefresh,
-            icon: isRefreshing
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Color(0xFF0077B6),
-                    ),
-                  )
-                : const Icon(Icons.refresh, color: Color(0xFF0077B6)),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionsList(List filtered) {
-    if (isLoading) return const LoadingIndicator();
-    return RefreshIndicator(
-      onRefresh: _pullToRefresh,
-      color: const Color(0xFF87CEEB),
-      child: filtered.isEmpty
-          ? const EmptyState(
-              icon: Icons.receipt_long_outlined,
-              title: 'No transactions found',
-              subtitle: 'Add a new transaction to get started',
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: filtered.length + 1,
-              itemBuilder: (context, index) {
-                if (index == filtered.length) return _buildSummaryCard();
-                return _buildTransactionItem(filtered[index]);
-              },
-            ),
+        ),
+      ],
     );
   }
 
@@ -1179,77 +1348,86 @@ class TransactionsPageState extends State<TransactionsPage> {
     }
     double monthBalance = monthIncome - monthExpense - monthSaved;
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 16),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.analytics, color: Colors.white, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${monthNames[int.parse(selectedMonth) - 1]} $selectedYear Summary',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryItem(
-                      'Income',
-                      formatMMK(monthIncome),
-                      Icons.arrow_downward,
-                      Colors.green[100]!,
-                      Colors.green[700]!,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildSummaryItem(
-                      'Expense',
-                      formatMMK(monthExpense),
-                      Icons.arrow_upward,
-                      Colors.red[100]!,
-                      Colors.red[700]!,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildSummaryItem(
-                      'Saved',
-                      formatMMK(monthSaved),
-                      Icons.savings,
-                      Colors.blue[100]!,
-                      Colors.blue[700]!,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _buildSummaryItem(
-                      'Balance',
-                      formatMMK(monthBalance),
-                      Icons.account_balance_wallet,
-                      monthBalance >= 0 ? Colors.green[100]! : Colors.red[100]!,
-                      monthBalance >= 0 ? Colors.green[700]! : Colors.red[700]!,
-                    ),
-                  ),
-                ],
-              ),
-            ],
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
           ),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0077B6).withOpacity(0.3),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.analytics, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  '${monthNames[int.parse(selectedMonth) - 1]} $selectedYear Summary',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryItem(
+                    'Income',
+                    formatMMK(monthIncome),
+                    Icons.arrow_downward,
+                    Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSummaryItem(
+                    'Expense',
+                    formatMMK(monthExpense),
+                    Icons.arrow_upward,
+                    Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildSummaryItem(
+                    'Saved',
+                    formatMMK(monthSaved),
+                    Icons.savings,
+                    Colors.white,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _buildSummaryItem(
+                    'Balance',
+                    formatMMK(monthBalance),
+                    Icons.account_balance_wallet,
+                    monthBalance >= 0 ? Colors.white : Colors.red[200]!,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -1259,18 +1437,17 @@ class TransactionsPageState extends State<TransactionsPage> {
     String label,
     String value,
     IconData icon,
-    Color bgColor,
-    Color iconColor,
+    Color color,
   ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: Colors.white.withOpacity(0.2),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          Icon(icon, color: iconColor, size: 20),
+          Icon(icon, color: color, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -1279,7 +1456,7 @@ class TransactionsPageState extends State<TransactionsPage> {
                 Text(
                   label,
                   style: TextStyle(
-                    color: iconColor.withOpacity(0.8),
+                    color: color.withOpacity(0.8),
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1287,7 +1464,7 @@ class TransactionsPageState extends State<TransactionsPage> {
                 Text(
                   value,
                   style: TextStyle(
-                    color: iconColor,
+                    color: color,
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1308,73 +1485,90 @@ class TransactionsPageState extends State<TransactionsPage> {
         double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
 
     Color iconColor = isSave
-        ? Colors.blue[700]!
-        : (isIncome ? Colors.green[700]! : Colors.red[700]!);
+        ? Colors.blue
+        : (isIncome ? Colors.green : Colors.red);
     Color bgColor = isSave
-        ? Colors.blue[50]!
-        : (isIncome ? Colors.green[50]! : Colors.red[50]!);
+        ? Colors.blue.withOpacity(0.1)
+        : (isIncome
+              ? Colors.green.withOpacity(0.1)
+              : Colors.red.withOpacity(0.1));
     IconData icon = isSave
         ? Icons.savings
         : (isIncome ? Icons.arrow_downward : Icons.arrow_upward);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: GlassCard(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
         onTap: () => showTransactionDetail(item),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isSave ? 'Save Money' : (item['category'] ?? ''),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0077B6),
-                      fontSize: 14,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSave ? 'Save Money' : (item['category'] ?? ''),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  Text(
-                    noteText.isNotEmpty
-                        ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
-                        : (item['date'] ?? ''),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      noteText.isNotEmpty
+                          ? '${item['date']} • ${noteText.length > 15 ? '${noteText.substring(0, 15)}...' : noteText}'
+                          : (item['date'] ?? ''),
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-              style: TextStyle(
-                color: iconColor,
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              Text(
+                '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+                style: TextStyle(
+                  color: iconColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 20,
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(
+                  Icons.delete_outline,
+                  color: Colors.red[300],
+                  size: 20,
+                ),
+                onPressed: () =>
+                    showDeleteConfirmation(item['id']?.toString() ?? ''),
               ),
-              onPressed: () =>
-                  showDeleteConfirmation(item['id']?.toString() ?? ''),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

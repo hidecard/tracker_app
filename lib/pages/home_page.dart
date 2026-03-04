@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import '../widgets/glass_card.dart';
-import '../widgets/stat_card.dart';
 import '../widgets/common_components.dart';
 
 class HomePage extends StatefulWidget {
@@ -34,18 +33,8 @@ class HomePageState extends State<HomePage> {
   Timer? _autoRefreshTimer;
 
   final List<String> monthNames = [
-    'January',
-    'February',
-    'March',
-    'April',
-    'May',
-    'June',
-    'July',
-    'August',
-    'September',
-    'October',
-    'November',
-    'December',
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
   String formatMMK(double amount) => '${amount.toStringAsFixed(0)} MMK';
@@ -54,7 +43,7 @@ class HomePageState extends State<HomePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: isError ? Colors.red : const Color(0xFF87CEEB),
+        backgroundColor: isError ? Colors.red[400] : const Color(0xFF0077B6),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       ),
@@ -115,49 +104,66 @@ class HomePageState extends State<HomePage> {
     String selectedType = 'expense';
     String selectedCategory = 'Food';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'Add Transaction',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildTypeDropdown(setDialogState, selectedType, (v) {
-                    setDialogState(() => selectedType = v!);
-                  }),
-                  const SizedBox(height: 12),
-                  _buildCategoryDropdown(setDialogState, selectedCategory, (v) {
-                    setDialogState(() => selectedCategory = v!);
-                  }),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildDialogButtons(
-                    ctx,
-                    amountController,
-                    noteController,
-                    selectedType,
-                    selectedCategory,
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Add Transaction',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildTypeSelector(setDialogState, selectedType, (v) {
+                  setDialogState(() => selectedType = v!);
+                }),
+                const SizedBox(height: 16),
+                _buildCategorySelector(setDialogState, selectedCategory, (v) {
+                  setDialogState(() => selectedCategory = v!);
+                }),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildDialogButtons(
+                  ctx,
+                  amountController,
+                  noteController,
+                  selectedType,
+                  selectedCategory,
+                ),
+              ],
             ),
           ),
         ),
@@ -165,84 +171,139 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTypeDropdown(
+  Widget _buildTypeSelector(
     StateSetter setDialogState,
     String selectedType,
     Function(String?) onChanged,
   ) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonFormField<String>(
-        value: selectedType,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        dropdownColor: const Color(0xFFE0F7FA),
-        items: const [
-          DropdownMenuItem(value: "income", child: Text("Income")),
-          DropdownMenuItem(value: "expense", child: Text("Expense")),
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF5F9FC),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: _buildTypeOption(
+              'expense',
+              'Expense',
+              Icons.arrow_upward,
+              Colors.red[400]!,
+              selectedType == 'expense',
+              () => onChanged('expense'),
+            ),
+          ),
+          Expanded(
+            child: _buildTypeOption(
+              'income',
+              'Income',
+              Icons.arrow_downward,
+              Colors.green[400]!,
+              selectedType == 'income',
+              () => onChanged('income'),
+            ),
+          ),
         ],
-        onChanged: onChanged,
       ),
     );
   }
 
-  Widget _buildCategoryDropdown(
+  Widget _buildTypeOption(String value, String label, IconData icon, Color color,
+      bool isSelected, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isSelected ? color : Colors.transparent,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: isSelected ? Colors.white : color, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : color,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategorySelector(
     StateSetter setDialogState,
     String selectedCategory,
     Function(String?) onChanged,
   ) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonFormField<String>(
-        value: selectedCategory,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.symmetric(horizontal: 12),
-        ),
-        dropdownColor: const Color(0xFFE0F7FA),
-        items: [
-          "Food",
-          "Rent",
-          "Bill",
-          "Shopping",
-          "Transport",
-          "Entertainment",
-          "Health",
-        ].map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-        onChanged: onChanged,
+    final categories = [
+      'Food', 'Rent', 'Bill', 'Shopping',
+      'Transport', 'Entertainment', 'Health',
+    ];
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: categories.map((cat) {
+        bool isSelected = selectedCategory == cat;
+        return GestureDetector(
+          onTap: () => onChanged(cat),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF0077B6) : const Color(0xFFF5F9FC),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF0077B6) : Colors.grey[300]!,
+              ),
+            ),
+            child: Text(
+              cat,
+              style: TextStyle(
+                color: isSelected ? Colors.white : Colors.grey[700],
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildAmountFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      style: const TextStyle(
+        fontSize: 24,
+        fontWeight: FontWeight.bold,
+        color: Color(0xFF0077B6),
+      ),
+      textAlign: TextAlign.center,
+      decoration: InputDecoration(
+        hintText: '0',
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 24),
+        labelText: 'Amount (MMK)',
+        labelStyle: const TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: const Icon(Icons.attach_money, color: Color(0xFF0077B6)),
       ),
     );
   }
 
-  Widget _buildAmountField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: const InputDecoration(
-          labelText: "Amount (MMK)",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.attach_money, color: Color(0xFF0077B6)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNoteField(TextEditingController controller) {
-    return GlassCard(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        controller: controller,
-        decoration: const InputDecoration(
-          labelText: "Note",
-          border: InputBorder.none,
-          prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
-        ),
+  Widget _buildNoteFieldNew(TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: const InputDecoration(
+        labelText: 'Note (optional)',
+        labelStyle: TextStyle(color: Color(0xFF0077B6)),
+        prefixIcon: Icon(Icons.note, color: Color(0xFF0077B6)),
       ),
     );
   }
@@ -257,20 +318,27 @@ class HomePageState extends State<HomePage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -288,7 +356,7 @@ class HomePageState extends State<HomePage> {
               Navigator.pop(ctx);
               addTransaction(body);
             },
-            child: const Text("Add"),
+            child: const Text("Add", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -302,9 +370,12 @@ class HomePageState extends State<HomePage> {
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
     String noteText = item['note']?.toString() ?? '';
-    double amountValue =
-        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    double amountValue = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
     String itemId = item['id']?.toString() ?? '';
+
+    Color accentColor = isSave
+        ? Colors.blue
+        : (isIncome ? Colors.green : Colors.red);
 
     showModalBottomSheet(
       context: context,
@@ -314,96 +385,106 @@ class HomePageState extends State<HomePage> {
         margin: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildDetailHandle(),
-            const SizedBox(height: 20),
-            _buildDetailIcon(isSave, isIncome),
             const SizedBox(height: 12),
-            _buildDetailTitle(categoryText, isSave),
-            _buildDetailAmount(amountValue, isSave, isIncome),
-            const SizedBox(height: 20),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSave
+                    ? Icons.savings
+                    : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
+                color: accentColor,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              categoryText.isEmpty ? 'Save Money' : categoryText,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0077B6),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 24),
             _buildDetailRow(Icons.calendar_today, 'Date', dateText),
-            _buildDetailRow(
-              Icons.category,
-              'Category',
-              categoryText.isEmpty ? '-' : categoryText,
+            _buildDetailRow(Icons.category, 'Category', categoryText.isEmpty ? '-' : categoryText),
+            _buildDetailRow(Icons.money, 'Type', isSave ? 'Save' : (isIncome ? 'Income' : 'Expense')),
+            _buildDetailRow(Icons.note, 'Note', noteText.isEmpty ? 'No note' : noteText),
+            const SizedBox(height: 24),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0077B6),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text('Edit'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showEditForm(item);
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red[400],
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      icon: const Icon(Icons.delete),
+                      label: const Text('Delete'),
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        showDeleteConfirmation(itemId);
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
-            _buildDetailRow(
-              Icons.attach_money,
-              'Type',
-              isSave ? 'Save' : (isIncome ? 'Income' : 'Expense'),
-            ),
-            _buildDetailRow(
-              Icons.note,
-              'Note',
-              noteText.isEmpty ? 'No note' : noteText,
-            ),
-            const SizedBox(height: 20),
-            _buildDetailActions(ctx, item),
             const SizedBox(height: 24),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildDetailHandle() {
-    return Container(
-      width: 40,
-      height: 4,
-      margin: const EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(2),
-      ),
-    );
-  }
-
-  Widget _buildDetailIcon(bool isSave, bool isIncome) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isSave
-            ? Colors.blue[50]
-            : (isIncome ? Colors.green[50] : Colors.red[50]),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        isSave
-            ? Icons.savings
-            : (isIncome ? Icons.arrow_downward : Icons.arrow_upward),
-        color: isSave
-            ? Colors.blue[700]
-            : (isIncome ? Colors.green[700] : Colors.red[700]),
-        size: 32,
-      ),
-    );
-  }
-
-  Widget _buildDetailTitle(String categoryText, bool isSave) {
-    return Text(
-      categoryText.isEmpty ? 'Save Money' : categoryText,
-      style: const TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-        color: Color(0xFF0077B6),
-      ),
-    );
-  }
-
-  Widget _buildDetailAmount(double amountValue, bool isSave, bool isIncome) {
-    return Text(
-      '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-      style: TextStyle(
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        color: isSave
-            ? Colors.blue[700]
-            : (isIncome ? Colors.green[700] : Colors.red[700]),
       ),
     );
   }
@@ -413,62 +494,15 @@ class HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: const Color(0xFF87CEEB)),
+          Icon(icon, size: 20, color: const Color(0xFF0077B6)),
           const SizedBox(width: 12),
           Text(label, style: TextStyle(color: Colors.grey[600])),
           const Spacer(),
           Text(
             value,
             style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: Color(0xFF0077B6),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailActions(BuildContext ctx, Map<String, dynamic> item) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF87CEEB),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.edit),
-              label: const Text('Edit'),
-              onPressed: () {
-                Navigator.pop(ctx);
-                showEditForm(item);
-              },
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              icon: const Icon(Icons.delete),
-              label: const Text('Delete'),
-              onPressed: () {
-                Navigator.pop(ctx);
-                showDeleteConfirmation(item['id']?.toString() ?? '');
-              },
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF333333),
             ),
           ),
         ],
@@ -480,17 +514,16 @@ class HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Transaction'),
-        content: const Text(
-          'Are you sure you want to delete this transaction?',
-        ),
+        content: const Text('Are you sure you want to delete this transaction?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red[400]),
             onPressed: () {
               Navigator.pop(ctx);
               deleteTransaction(id);
@@ -513,55 +546,68 @@ class HomePageState extends State<HomePage> {
     String selectedCategory = item['category']?.toString() ?? 'Food';
     String itemId = item['id']?.toString() ?? '';
 
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDialogState) => Dialog(
-          backgroundColor: Colors.transparent,
-          child: GlassCard(
-            padding: const EdgeInsets.all(20),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    "Edit Transaction",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF0077B6),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(ctx).viewInsets.bottom,
+        ),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: StatefulBuilder(
+          builder: (context, setDialogState) => SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
-                  _buildTypeDropdown(
-                    setDialogState,
-                    selectedType,
-                    (v) => setDialogState(() => selectedType = v!),
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  "Edit Transaction",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF0077B6),
                   ),
-                  const SizedBox(height: 12),
-                  _buildCategoryDropdown(
-                    setDialogState,
-                    selectedCategory,
-                    (v) => setDialogState(() => selectedCategory = v!),
-                  ),
-                  const SizedBox(height: 12),
-                  _buildAmountField(amountController),
-                  const SizedBox(height: 12),
-                  _buildNoteField(noteController),
-                  const SizedBox(height: 20),
-                  _buildEditDialogButtons(
-                    ctx,
-                    amountController,
-                    noteController,
-                    selectedType,
-                    selectedCategory,
-                    itemId,
-                    item,
-                  ),
-                ],
-              ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                _buildTypeSelector(setDialogState, selectedType, (v) {
+                  setDialogState(() => selectedType = v!);
+                }),
+                const SizedBox(height: 16),
+                _buildCategorySelector(setDialogState, selectedCategory, (v) {
+                  setDialogState(() => selectedCategory = v!);
+                }),
+                const SizedBox(height: 16),
+                _buildAmountFieldNew(amountController),
+                const SizedBox(height: 16),
+                _buildNoteFieldNew(noteController),
+                const SizedBox(height: 24),
+                _buildEditDialogButtons(
+                  ctx,
+                  amountController,
+                  noteController,
+                  selectedType,
+                  selectedCategory,
+                  itemId,
+                  item,
+                ),
+              ],
             ),
           ),
         ),
@@ -581,20 +627,27 @@ class HomePageState extends State<HomePage> {
     return Row(
       children: [
         Expanded(
-          child: TextButton(
+          child: OutlinedButton(
             onPressed: () => Navigator.pop(ctx),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.grey),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 16),
         Expanded(
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF87CEEB),
+              backgroundColor: const Color(0xFF0077B6),
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
             onPressed: () {
@@ -604,9 +657,7 @@ class HomePageState extends State<HomePage> {
               }
               Map body = {
                 "id": itemId,
-                "date":
-                    item['date']?.toString() ??
-                    DateTime.now().toString().substring(0, 10),
+                "date": item['date']?.toString() ?? DateTime.now().toString().substring(0, 10),
                 "type": selectedType,
                 "category": selectedCategory,
                 "amount": amountController.text,
@@ -615,7 +666,7 @@ class HomePageState extends State<HomePage> {
               Navigator.pop(ctx);
               updateTransaction(body);
             },
-            child: const Text("Update"),
+            child: const Text("Update", style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ),
       ],
@@ -651,11 +702,7 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200 && mounted) {
         List newData = jsonDecode(response.body);
-        newData.sort(
-          (a, b) => (b['date'] ?? '').toString().compareTo(
-            (a['date'] ?? '').toString(),
-          ),
-        );
+        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
         setState(() {
           data = newData;
           cachedData = List.from(newData);
@@ -682,11 +729,7 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200) {
         List newData = jsonDecode(response.body);
-        newData.sort(
-          (a, b) => (b['date'] ?? '').toString().compareTo(
-            (a['date'] ?? '').toString(),
-          ),
-        );
+        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
         if (!mounted) return;
         setState(() {
           data = newData;
@@ -708,11 +751,7 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200) {
         List newData = jsonDecode(response.body);
-        newData.sort(
-          (a, b) => (b['date'] ?? '').toString().compareTo(
-            (a['date'] ?? '').toString(),
-          ),
-        );
+        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
         if (!mounted) return;
         setState(() {
           data = newData;
@@ -731,17 +770,13 @@ class HomePageState extends State<HomePage> {
     for (var item in data) {
       try {
         DateTime date = DateTime.parse(item['date'] ?? '');
-        if (date.month.toString() == selectedMonth &&
-            date.year.toString() == selectedYear) {
+        if (date.month.toString() == selectedMonth && date.year.toString() == selectedYear) {
           if (item['type'] == 'income') {
-            totalIncome +=
-                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalIncome += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           } else if (item['type'] == 'expense') {
-            totalExpense +=
-                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalExpense += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           } else if (item['type'] == 'save') {
-            totalSaved +=
-                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalSaved += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           }
         }
       } catch (_) {}
@@ -784,50 +819,78 @@ class HomePageState extends State<HomePage> {
     double balance = totalIncome - totalExpense - totalSaved;
     Map<String, double> categoryTotals = getCategoryTotals();
     int currentYear = DateTime.now().year;
-    List<String> years = List.generate(
-      5,
-      (index) => (currentYear - 2 + index).toString(),
-    );
+    List<String> years = List.generate(5, (index) => (currentYear - 2 + index).toString());
 
     return Scaffold(
-      extendBodyBehindAppBar: false,
-      appBar: _buildAppBar(),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFFE0F7FA), Color(0xFFB2EBF2), Color(0xFF80DEEA)],
+      backgroundColor: const Color(0xFFF5F9FC),
+      body: CustomScrollView(
+        slivers: [
+          _buildSliverAppBar(),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildBalanceCard(balance),
+                  const SizedBox(height: 16),
+                  _buildMonthYearSelector(years),
+                  const SizedBox(height: 16),
+                  _buildStatsRow(balance),
+                  const SizedBox(height: 16),
+                  _buildPieChart(categoryTotals),
+                  const SizedBox(height: 24),
+                  _buildRecentTransactionsHeader(),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildBalanceCard(balance),
-              _buildMonthYearSelector(years),
-              _buildStatsRow(balance),
-              _buildPieChart(categoryTotals),
-              _buildRecentTransactionsHeader(),
-              Expanded(child: _buildTransactionsList()),
-            ],
-          ),
-        ),
+          if (isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator(color: Color(0xFF0077B6))),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              sliver: SliverList(
+                delegate: SliverChildBuilderDelegate(
+                  (context, index) {
+                    if (index >= data.length || index >= 5) return null;
+                    return _buildTransactionItem(data[index]);
+                  },
+                  childCount: data.length > 5 ? 5 : data.length,
+                ),
+              ),
+            ),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
       ),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
-    return AppBar(
-      flexibleSpace: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+  Widget _buildSliverAppBar() {
+    return SliverAppBar(
+      expandedHeight: 120,
+      floating: false,
+      pinned: true,
+      flexibleSpace: FlexibleSpaceBar(
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        background: Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
           ),
         ),
       ),
-      title: const Text('Dashboard'),
       actions: [
         IconButton(
           onPressed: _pullToRefresh,
@@ -847,204 +910,195 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget _buildBalanceCard(double balance) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: GlassCard(
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0077B6).withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF87CEEB).withOpacity(0.3),
+                  color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(
                   Icons.account_balance_wallet,
-                  color: Color(0xFF0077B6),
-                  size: 28,
+                  color: Colors.white,
+                  size: 24,
                 ),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Current Balance',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Color(0xFF0077B6),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      formatMMK(balance),
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0077B6),
-                      ),
-                    ),
-                  ],
+              const Spacer(),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  monthNames[int.parse(selectedMonth) - 1],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          const Text(
+            'Current Balance',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formatMMK(balance),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildMonthYearSelector(List<String> years) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        children: [
-          Expanded(
-            child: GlassCard(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedYear,
-                  isExpanded: true,
-                  dropdownColor: const Color(0xFFE0F7FA),
-                  icon: const Icon(
-                    Icons.calendar_today,
-                    color: Color(0xFF0077B6),
-                    size: 18,
-                  ),
-                  items: years
-                      .map(
-                        (year) => DropdownMenuItem(
-                          value: year,
-                          child: Text(
-                            year,
-                            style: const TextStyle(
-                              color: Color(0xFF0077B6),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    selectedYear = value!;
-                    calculateTotals();
-                    setState(() {});
-                  },
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
+              ],
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedYear,
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
+                items: years.map((year) => DropdownMenuItem(
+                  value: year,
+                  child: Text(year, style: const TextStyle(
+                    color: Color(0xFF0077B6),
+                    fontWeight: FontWeight.w600,
+                  )),
+                )).toList(),
+                onChanged: (value) {
+                  selectedYear = value!;
+                  calculateTotals();
+                  setState(() {});
+                },
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 2,
-            child: GlassCard(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: selectedMonth,
-                  isExpanded: true,
-                  dropdownColor: const Color(0xFFE0F7FA),
-                  icon: const Icon(
-                    Icons.arrow_drop_down,
-                    color: Color(0xFF0077B6),
-                  ),
-                  items: List.generate(
-                    12,
-                    (i) => DropdownMenuItem(
-                      value: (i + 1).toString(),
-                      child: Text(
-                        monthNames[i],
-                        style: const TextStyle(
-                          color: Color(0xFF0077B6),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ).toList(),
-                  onChanged: (value) {
-                    selectedMonth = value!;
-                    calculateTotals();
-                    setState(() {});
-                  },
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          flex: 2,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
                 ),
+              ],
+            ),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedMonth,
+                isExpanded: true,
+                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
+                items: List.generate(12, (i) => DropdownMenuItem(
+                  value: (i + 1).toString(),
+                  child: Text(monthNames[i], style: const TextStyle(
+                    color: Color(0xFF0077B6),
+                    fontWeight: FontWeight.w600,
+                  )),
+                )).toList(),
+                onChanged: (value) {
+                  selectedMonth = value!;
+                  calculateTotals();
+                  setState(() {});
+                },
               ),
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
   Widget _buildStatsRow(double balance) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          _buildStatItem(
-            'Income',
-            formatMMK(totalIncome),
-            Colors.green[700]!,
-            Icons.arrow_downward,
-          ),
-          const SizedBox(width: 8),
-          _buildStatItem(
-            'Expense',
-            formatMMK(totalExpense),
-            Colors.red[700]!,
-            Icons.arrow_upward,
-          ),
-          const SizedBox(width: 8),
-          _buildStatItem(
-            'Saved',
-            formatMMK(totalSaved),
-            Colors.blue[700]!,
-            Icons.savings,
-          ),
-          const SizedBox(width: 8),
-          _buildStatItem(
-            'Balance',
-            formatMMK(balance),
-            balance >= 0 ? Colors.green[700]! : Colors.red[700]!,
-            Icons.account_balance,
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        _buildStatItem('Income', formatMMK(totalIncome), Colors.green[400]!, Icons.arrow_downward),
+        const SizedBox(width: 8),
+        _buildStatItem('Expense', formatMMK(totalExpense), Colors.red[400]!, Icons.arrow_upward),
+        const SizedBox(width: 8),
+        _buildStatItem('Saved', formatMMK(totalSaved), Colors.blue[400]!, Icons.savings),
+        const SizedBox(width: 8),
+        _buildStatItem('Balance', formatMMK(balance), balance >= 0 ? Colors.green[400]! : Colors.red[400]!, Icons.account_balance),
+      ],
     );
   }
 
-  Widget _buildStatItem(
-    String label,
-    String value,
-    Color color,
-    IconData icon,
-  ) {
+  Widget _buildStatItem(String label, String value, Color color, IconData icon) {
     return Expanded(
-      child: GlassCard(
-        padding: const EdgeInsets.all(8),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
           children: [
             Icon(icon, color: color, size: 20),
+            const SizedBox(height: 8),
+            Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 10), textAlign: TextAlign.center),
             const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(color: Colors.grey[700], fontSize: 10),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 2),
-            Text(
-              value,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text(value, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           ],
         ),
       ),
@@ -1052,80 +1106,93 @@ class HomePageState extends State<HomePage> {
   }
 
   Widget _buildPieChart(Map<String, double> categoryTotals) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(12),
-        child: SizedBox(
-          height: 180,
-          child: categoryTotals.isEmpty
-              ? const Center(
-                  child: Text(
-                    'No expenses',
-                    style: TextStyle(color: Color(0xFF0077B6)),
-                  ),
-                )
-              : PieChart(
-                  PieChartData(
-                    sectionsSpace: 2,
-                    centerSpaceRadius: 35,
-                    sections: categoryTotals.entries
-                        .map(
-                          (e) => PieChartSectionData(
-                            value: e.value,
-                            title: e.key,
-                            color: _getCategoryColor(e.key),
-                            radius: 45,
-                            titleStyle: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        )
-                        .toList(),
+    return Container(
+      height: 200,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: categoryTotals.isEmpty
+          ? const Center(child: Text('No expenses', style: TextStyle(color: Color(0xFF0077B6))))
+          : Row(
+              children: [
+                Expanded(
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 2,
+                      centerSpaceRadius: 30,
+                      sections: categoryTotals.entries.map((e) => PieChartSectionData(
+                        value: e.value,
+                        title: e.key,
+                        color: _getCategoryColor(e.key),
+                        radius: 40,
+                        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
+                      )).toList(),
+                    ),
                   ),
                 ),
-        ),
-      ),
+                const SizedBox(width: 16),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: categoryTotals.entries.take(5).map((e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: _getCategoryColor(e.key),
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(e.key, style: const TextStyle(fontSize: 12)),
+                      ],
+                    ),
+                  )).toList(),
+                ),
+              ],
+            ),
     );
   }
 
   Widget _buildRecentTransactionsHeader() {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Text(
-            'Recent Transactions',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return Row(
+      children: [
+        const Text(
+          'Recent Transactions',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0077B6),
+          ),
+        ),
+        const Spacer(),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: const Color(0xFF0077B6).withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Text(
+            '${data.length}',
+            style: const TextStyle(
               color: Color(0xFF0077B6),
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const Spacer(),
-          AppBadge(text: '${data.length}'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTransactionsList() {
-    if (isLoading) {
-      return const LoadingIndicator();
-    }
-    return RefreshIndicator(
-      onRefresh: _pullToRefresh,
-      color: const Color(0xFF87CEEB),
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: data.length > 5 ? 5 : data.length,
-        itemBuilder: (context, index) {
-          var item = data[index];
-          return _buildTransactionItem(item);
-        },
-      ),
+        ),
+      ],
     );
   }
 
@@ -1134,75 +1201,88 @@ class HomePageState extends State<HomePage> {
     bool isSave = item['type'] == 'save';
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
-    double amountValue =
-        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    double amountValue = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
 
     Color iconColor;
     Color bgColor;
     IconData icon;
 
     if (isSave) {
-      iconColor = Colors.blue[700]!;
-      bgColor = Colors.blue[50]!;
+      iconColor = Colors.blue;
+      bgColor = Colors.blue.withOpacity(0.1);
       icon = Icons.savings;
     } else if (isIncome) {
-      iconColor = Colors.green[700]!;
-      bgColor = Colors.green[50]!;
+      iconColor = Colors.green;
+      bgColor = Colors.green.withOpacity(0.1);
       icon = Icons.arrow_downward;
     } else {
-      iconColor = Colors.red[700]!;
-      bgColor = Colors.red[50]!;
+      iconColor = Colors.red;
+      bgColor = Colors.red.withOpacity(0.1);
       icon = Icons.arrow_upward;
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: GlassCard(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
         onTap: () => showTransactionDetail(item),
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: bgColor,
-                borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
-              child: Icon(icon, color: iconColor, size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    isSave ? 'Save Money' : categoryText,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF0077B6),
-                      fontSize: 14,
+            ],
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      isSave ? 'Save Money' : categoryText,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF333333),
+                        fontSize: 15,
+                      ),
                     ),
-                  ),
-                  Text(
-                    dateText,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      dateText,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Text(
-              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
-              style: TextStyle(
-                color: isSave
-                    ? Colors.blue[700]
-                    : (isIncome ? Colors.green[700] : Colors.red[700]),
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+              Text(
+                '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+                style: TextStyle(
+                  color: iconColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 }
+
