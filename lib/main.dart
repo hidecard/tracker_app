@@ -47,6 +47,7 @@ class AppLocalizations {
     'save_money': 'Save Money',
     'saved_transactions': 'Saved Records',
     'day': 'Day',
+    'summary': 'Summary',
   };
 }
 
@@ -122,6 +123,7 @@ class MainScreenState extends State<MainScreen> {
       GlobalKey<TransactionsTabState>();
   final GlobalKey<TransactionsTabState> _saveKey =
       GlobalKey<TransactionsTabState>();
+  final GlobalKey<SummaryTabState> _summaryKey = GlobalKey<SummaryTabState>();
 
   late final List<Widget> _pages;
 
@@ -131,6 +133,7 @@ class MainScreenState extends State<MainScreen> {
     _pages = [
       HomeTab(key: _homeKey),
       TransactionsTab(key: _transactionsKey),
+      SummaryTab(key: _summaryKey),
       TransactionsTab(key: _saveKey, forcedType: 'save'),
     ];
   }
@@ -192,6 +195,12 @@ class MainScreenState extends State<MainScreen> {
                     _buildCenterAddButton(context),
                     _buildNavItem(
                       2,
+                      Icons.insert_chart_outlined,
+                      Icons.insert_chart,
+                      'summary',
+                    ),
+                    _buildNavItem(
+                      3,
                       Icons.savings_outlined,
                       Icons.savings,
                       'save',
@@ -296,11 +305,328 @@ class MainScreenState extends State<MainScreen> {
   void _showAddFormFromNav() {
     if (_currentIndex == 1) {
       _transactionsKey.currentState?.showAddForm();
-    } else if (_currentIndex == 2) {
+    } else if (_currentIndex == 3) {
       _saveKey.currentState?.showAddForm();
     } else {
       _homeKey.currentState?.showAddForm();
     }
+  }
+}
+
+// ==================== SUMMARY TAB ====================
+class SummaryTab extends StatefulWidget {
+  const SummaryTab({super.key});
+
+  @override
+  State<SummaryTab> createState() => SummaryTabState();
+}
+
+class SummaryTabState extends State<SummaryTab> {
+  final String url =
+      "https://script.google.com/macros/s/AKfycbx2grg3odTkT7KlCvjiUzCH80jXLsrZX2gnFDCntu2FQpW5ko4urwJkn8fd81cBOOKmpA/exec";
+
+  List data = [];
+  bool isLoading = false;
+  String mode = 'month'; // 'month' or 'day'
+  DateTime selectedDate = DateTime.now();
+  String selectedMonth = DateTime.now().month.toString();
+  String selectedYear = DateTime.now().year.toString();
+  final TextEditingController searchController = TextEditingController();
+
+  double totalIncome = 0;
+  double totalExpense = 0;
+  double totalSaved = 0;
+
+  String formatMMK(double amount) => '${amount.toStringAsFixed(0)}MMK';
+
+  @override
+  void initState() {
+    super.initState();
+    loadData();
+  }
+
+  Future<void> loadData() async {
+    if (!mounted) return;
+    setState(() => isLoading = true);
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        List newData = jsonDecode(response.body);
+        newData.sort(
+          (a, b) => (b['date'] ?? '').toString().compareTo(
+            (a['date'] ?? '').toString(),
+          ),
+        );
+        if (!mounted) return;
+        setState(() {
+          data = newData;
+        });
+        calculateTotals();
+      }
+    } catch (_) {}
+    if (mounted) setState(() => isLoading = false);
+  }
+
+  void calculateTotals() {
+    totalIncome = 0;
+    totalExpense = 0;
+    totalSaved = 0;
+    for (var item in filteredItems()) {
+      try {
+        if (item['type'] == 'income') {
+          totalIncome +=
+              double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+        } else if (item['type'] == 'expense') {
+          totalExpense +=
+              double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+        } else if (item['type'] == 'save') {
+          totalSaved += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+        }
+      } catch (_) {}
+    }
+    if (mounted) setState(() {});
+  }
+
+  List filteredItems() {
+    String q = searchController.text.trim().toLowerCase();
+    return data.where((item) {
+      try {
+        DateTime d = DateTime.parse(item['date'] ?? '');
+        bool dateMatch = false;
+        if (mode == 'month') {
+          dateMatch =
+              d.month.toString() == selectedMonth &&
+              d.year.toString() == selectedYear;
+        } else {
+          dateMatch =
+              d.year == selectedDate.year &&
+              d.month == selectedDate.month &&
+              d.day == selectedDate.day;
+        }
+        if (!dateMatch) return false;
+        if (q.isEmpty) return true;
+        String cat = (item['category'] ?? '').toString().toLowerCase();
+        String note = (item['note'] ?? '').toString().toLowerCase();
+        return cat.contains(q) ||
+            note.contains(q) ||
+            item['date'].toString().contains(q);
+      } catch (_) {
+        return false;
+      }
+    }).toList();
+  }
+
+  Future<void> _pickDate() async {
+    DateTime? d = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (d != null) {
+      setState(() => selectedDate = d);
+      calculateTotals();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double balance = totalIncome - totalExpense - totalSaved;
+    int currentYear = DateTime.now().year;
+    List<String> years = List.generate(
+      5,
+      (index) => (currentYear - 2 + index).toString(),
+    );
+
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: searchController,
+                      decoration: const InputDecoration(
+                        hintText: 'Search category, note or date',
+                        prefixIcon: Icon(Icons.search),
+                      ),
+                      onChanged: (_) => calculateTotals(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  ToggleButtons(
+                    isSelected: [mode == 'day', mode == 'month'],
+                    onPressed: (i) {
+                      setState(() => mode = i == 0 ? 'day' : 'month');
+                      calculateTotals();
+                    },
+                    children: const [
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('Day'),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('Month'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  if (mode == 'day') ...[
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.8),
+                          foregroundColor: const Color(0xFF0077B6),
+                        ),
+                        icon: const Icon(Icons.calendar_today),
+                        label: Text(
+                          '${selectedDate.toString().substring(0, 10)}',
+                        ),
+                        onPressed: _pickDate,
+                      ),
+                    ),
+                  ] else ...[
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedYear,
+                          items: years
+                              .map(
+                                (y) =>
+                                    DropdownMenuItem(value: y, child: Text(y)),
+                              )
+                              .toList(),
+                          onChanged: (v) => setState(() {
+                            selectedYear = v!;
+                            calculateTotals();
+                          }),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: selectedMonth,
+                          items: List.generate(
+                            12,
+                            (i) => DropdownMenuItem(
+                              value: (i + 1).toString(),
+                              child: Text('${i + 1}'),
+                            ),
+                          ).toList(),
+                          onChanged: (v) => setState(() {
+                            selectedMonth = v!;
+                            calculateTotals();
+                          }),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _smallStat(
+                    'Income',
+                    formatMMK(totalIncome),
+                    Colors.green[700]!,
+                  ),
+                  _smallStat(
+                    'Expense',
+                    formatMMK(totalExpense),
+                    Colors.red[700]!,
+                  ),
+                  _smallStat('Saved', formatMMK(totalSaved), Colors.blue[700]!),
+                  _smallStat(
+                    'Balance',
+                    formatMMK(balance),
+                    balance >= 0 ? Colors.green[700]! : Colors.red[700]!,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: filteredItems().length,
+                      itemBuilder: (context, idx) {
+                        var item = filteredItems()[idx];
+                        bool isIncome = item['type'] == 'income';
+                        bool isSave = item['type'] == 'save';
+                        return Card(
+                          child: ListTile(
+                            leading: Icon(
+                              isSave
+                                  ? Icons.savings
+                                  : (isIncome
+                                        ? Icons.arrow_downward
+                                        : Icons.arrow_upward),
+                              color: isSave
+                                  ? Colors.blue[700]
+                                  : (isIncome
+                                        ? Colors.green[700]
+                                        : Colors.red[700]),
+                            ),
+                            title: Text(
+                              item['category'] ?? (isSave ? 'Save' : ''),
+                            ),
+                            subtitle: Text(item['date'] ?? ''),
+                            trailing: Text(
+                              '${isIncome ? '+' : '-'}${formatMMK(double.tryParse(item['amount']?.toString() ?? '0') ?? 0)}',
+                              style: TextStyle(
+                                color: isSave
+                                    ? Colors.blue[700]
+                                    : (isIncome
+                                          ? Colors.green[700]
+                                          : Colors.red[700]),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _smallStat(String label, String value, Color color) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(label, style: TextStyle(color: Colors.grey[700], fontSize: 12)),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(color: color, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -2725,6 +3051,169 @@ class TransactionsTabState extends State<TransactionsTab> {
     );
   }
 
+  Widget _buildSummaryCard() {
+    double monthIncome = 0;
+    double monthExpense = 0;
+    double monthSaved = 0;
+
+    for (var item in data) {
+      try {
+        DateTime date = DateTime.parse(item['date'] ?? '');
+        if (date.month.toString() == selectedMonth &&
+            date.year.toString() == selectedYear) {
+          String type = item['type'] ?? '';
+          double amount =
+              double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+          if (type == 'income') {
+            monthIncome += amount;
+          } else if (type == 'expense') {
+            monthExpense += amount;
+          } else if (type == 'save') {
+            monthSaved += amount;
+          }
+        }
+      } catch (_) {}
+    }
+
+    double monthBalance = monthIncome - monthExpense - monthSaved;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 16),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0077B6), Color(0xFF87CEEB)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0077B6).withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.analytics, color: Colors.white, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    '${monthNames[int.parse(selectedMonth) - 1]} $selectedYear Summary',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      'Income',
+                      formatMMK(monthIncome),
+                      Icons.arrow_downward,
+                      Colors.green[100]!,
+                      Colors.green[700]!,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      'Expense',
+                      formatMMK(monthExpense),
+                      Icons.arrow_upward,
+                      Colors.red[100]!,
+                      Colors.red[700]!,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildSummaryItem(
+                      'Saved',
+                      formatMMK(monthSaved),
+                      Icons.savings,
+                      Colors.blue[100]!,
+                      Colors.blue[700]!,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildSummaryItem(
+                      'Balance',
+                      formatMMK(monthBalance),
+                      Icons.account_balance_wallet,
+                      monthBalance >= 0 ? Colors.green[100]! : Colors.red[100]!,
+                      monthBalance >= 0 ? Colors.green[700]! : Colors.red[700]!,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    String label,
+    String value,
+    IconData icon,
+    Color bgColor,
+    Color iconColor,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: iconColor.withOpacity(0.8),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    color: iconColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     int currentYear = DateTime.now().year;
@@ -2975,8 +3464,11 @@ class TransactionsTabState extends State<TransactionsTab> {
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
                                 ),
-                                itemCount: filtered.length,
+                                itemCount: filtered.length + 1,
                                 itemBuilder: (context, index) {
+                                  if (index == filtered.length) {
+                                    return _buildSummaryCard();
+                                  }
                                   var item = filtered[index];
                                   bool isIncome = item['type'] == 'income';
                                   bool isSave = item['type'] == 'save';
