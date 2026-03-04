@@ -1129,15 +1129,19 @@ class TransactionsPageState extends State<TransactionsPage> {
 
   Widget _buildSliverAppBar(List<String> years) {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 100,
       floating: false,
       pinned: true,
+      backgroundColor: const Color(0xFF0077B6),
+      elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
         title: Text(
           widget.forcedType == 'save' ? 'Saved Records' : 'All Transactions',
           style: const TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
         background: Container(
@@ -1151,24 +1155,43 @@ class TransactionsPageState extends State<TransactionsPage> {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: _pullToRefresh,
-          icon: isRefreshing
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.refresh, color: Colors.white),
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            onPressed: _pullToRefresh,
+            icon: isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.refresh, color: Colors.white),
+          ),
         ),
       ],
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(60),
+        preferredSize: const Size.fromHeight(70),
         child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Expanded(child: _buildYearDropdown(years)),

@@ -33,8 +33,18 @@ class HomePageState extends State<HomePage> {
   Timer? _autoRefreshTimer;
 
   final List<String> monthNames = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December',
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
   ];
 
   String formatMMK(double amount) => '${amount.toStringAsFixed(0)} MMK';
@@ -109,9 +119,7 @@ class HomePageState extends State<HomePage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -209,8 +217,14 @@ class HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTypeOption(String value, String label, IconData icon, Color color,
-      bool isSelected, VoidCallback onTap) {
+  Widget _buildTypeOption(
+    String value,
+    String label,
+    IconData icon,
+    Color color,
+    bool isSelected,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -244,8 +258,13 @@ class HomePageState extends State<HomePage> {
     Function(String?) onChanged,
   ) {
     final categories = [
-      'Food', 'Rent', 'Bill', 'Shopping',
-      'Transport', 'Entertainment', 'Health',
+      'Food',
+      'Rent',
+      'Bill',
+      'Shopping',
+      'Transport',
+      'Entertainment',
+      'Health',
     ];
     return Wrap(
       spacing: 8,
@@ -258,7 +277,9 @@ class HomePageState extends State<HomePage> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: isSelected ? const Color(0xFF0077B6) : const Color(0xFFF5F9FC),
+              color: isSelected
+                  ? const Color(0xFF0077B6)
+                  : const Color(0xFFF5F9FC),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: isSelected ? const Color(0xFF0077B6) : Colors.grey[300]!,
@@ -356,7 +377,10 @@ class HomePageState extends State<HomePage> {
               Navigator.pop(ctx);
               addTransaction(body);
             },
-            child: const Text("Add", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Add",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -370,7 +394,8 @@ class HomePageState extends State<HomePage> {
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
     String noteText = item['note']?.toString() ?? '';
-    double amountValue = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    double amountValue =
+        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
     String itemId = item['id']?.toString() ?? '';
 
     Color accentColor = isSave
@@ -434,9 +459,21 @@ class HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 24),
             _buildDetailRow(Icons.calendar_today, 'Date', dateText),
-            _buildDetailRow(Icons.category, 'Category', categoryText.isEmpty ? '-' : categoryText),
-            _buildDetailRow(Icons.money, 'Type', isSave ? 'Save' : (isIncome ? 'Income' : 'Expense')),
-            _buildDetailRow(Icons.note, 'Note', noteText.isEmpty ? 'No note' : noteText),
+            _buildDetailRow(
+              Icons.category,
+              'Category',
+              categoryText.isEmpty ? '-' : categoryText,
+            ),
+            _buildDetailRow(
+              Icons.money,
+              'Type',
+              isSave ? 'Save' : (isIncome ? 'Income' : 'Expense'),
+            ),
+            _buildDetailRow(
+              Icons.note,
+              'Note',
+              noteText.isEmpty ? 'No note' : noteText,
+            ),
             const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -516,7 +553,9 @@ class HomePageState extends State<HomePage> {
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('Delete Transaction'),
-        content: const Text('Are you sure you want to delete this transaction?'),
+        content: const Text(
+          'Are you sure you want to delete this transaction?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -551,9 +590,7 @@ class HomePageState extends State<HomePage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(ctx).viewInsets.bottom,
-        ),
+        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
@@ -657,7 +694,9 @@ class HomePageState extends State<HomePage> {
               }
               Map body = {
                 "id": itemId,
-                "date": item['date']?.toString() ?? DateTime.now().toString().substring(0, 10),
+                "date":
+                    item['date']?.toString() ??
+                    DateTime.now().toString().substring(0, 10),
                 "type": selectedType,
                 "category": selectedCategory,
                 "amount": amountController.text,
@@ -666,7 +705,10 @@ class HomePageState extends State<HomePage> {
               Navigator.pop(ctx);
               updateTransaction(body);
             },
-            child: const Text("Update", style: TextStyle(fontWeight: FontWeight.bold)),
+            child: const Text(
+              "Update",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ],
@@ -702,7 +744,11 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200 && mounted) {
         List newData = jsonDecode(response.body);
-        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
+        newData.sort(
+          (a, b) => (b['date'] ?? '').toString().compareTo(
+            (a['date'] ?? '').toString(),
+          ),
+        );
         setState(() {
           data = newData;
           cachedData = List.from(newData);
@@ -729,7 +775,11 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200) {
         List newData = jsonDecode(response.body);
-        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
+        newData.sort(
+          (a, b) => (b['date'] ?? '').toString().compareTo(
+            (a['date'] ?? '').toString(),
+          ),
+        );
         if (!mounted) return;
         setState(() {
           data = newData;
@@ -751,7 +801,11 @@ class HomePageState extends State<HomePage> {
       );
       if (response.statusCode == 200) {
         List newData = jsonDecode(response.body);
-        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
+        newData.sort(
+          (a, b) => (b['date'] ?? '').toString().compareTo(
+            (a['date'] ?? '').toString(),
+          ),
+        );
         if (!mounted) return;
         setState(() {
           data = newData;
@@ -770,13 +824,17 @@ class HomePageState extends State<HomePage> {
     for (var item in data) {
       try {
         DateTime date = DateTime.parse(item['date'] ?? '');
-        if (date.month.toString() == selectedMonth && date.year.toString() == selectedYear) {
+        if (date.month.toString() == selectedMonth &&
+            date.year.toString() == selectedYear) {
           if (item['type'] == 'income') {
-            totalIncome += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalIncome +=
+                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           } else if (item['type'] == 'expense') {
-            totalExpense += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalExpense +=
+                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           } else if (item['type'] == 'save') {
-            totalSaved += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            totalSaved +=
+                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
           }
         }
       } catch (_) {}
@@ -819,7 +877,10 @@ class HomePageState extends State<HomePage> {
     double balance = totalIncome - totalExpense - totalSaved;
     Map<String, double> categoryTotals = getCategoryTotals();
     int currentYear = DateTime.now().year;
-    List<String> years = List.generate(5, (index) => (currentYear - 2 + index).toString());
+    List<String> years = List.generate(
+      5,
+      (index) => (currentYear - 2 + index).toString(),
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FC),
@@ -838,7 +899,7 @@ class HomePageState extends State<HomePage> {
                   const SizedBox(height: 16),
                   _buildStatsRow(balance),
                   const SizedBox(height: 16),
-                  _buildPieChart(categoryTotals),
+                  _buildLineChart(),
                   const SizedBox(height: 24),
                   _buildRecentTransactionsHeader(),
                 ],
@@ -847,19 +908,18 @@ class HomePageState extends State<HomePage> {
           ),
           if (isLoading)
             const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF0077B6))),
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF0077B6)),
+              ),
             )
           else
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index >= data.length || index >= 5) return null;
-                    return _buildTransactionItem(data[index]);
-                  },
-                  childCount: data.length > 5 ? 5 : data.length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index >= data.length || index >= 5) return null;
+                  return _buildTransactionItem(data[index]);
+                }, childCount: data.length > 5 ? 5 : data.length),
               ),
             ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -870,15 +930,19 @@ class HomePageState extends State<HomePage> {
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 120,
+      expandedHeight: 100,
       floating: false,
       pinned: true,
+      backgroundColor: const Color(0xFF0077B6),
+      elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
+        centerTitle: true,
         title: const Text(
           'Dashboard',
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.bold,
+            fontSize: 20,
           ),
         ),
         background: Container(
@@ -892,18 +956,25 @@ class HomePageState extends State<HomePage> {
         ),
       ),
       actions: [
-        IconButton(
-          onPressed: _pullToRefresh,
-          icon: isRefreshing
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.refresh, color: Colors.white),
+        Container(
+          margin: const EdgeInsets.only(right: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            onPressed: _pullToRefresh,
+            icon: isRefreshing
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.refresh, color: Colors.white),
+          ),
         ),
       ],
     );
@@ -947,7 +1018,10 @@ class HomePageState extends State<HomePage> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(20),
@@ -965,10 +1039,7 @@ class HomePageState extends State<HomePage> {
           const SizedBox(height: 20),
           const Text(
             'Current Balance',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 4),
           Text(
@@ -1005,14 +1076,24 @@ class HomePageState extends State<HomePage> {
               child: DropdownButton<String>(
                 value: selectedYear,
                 isExpanded: true,
-                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
-                items: years.map((year) => DropdownMenuItem(
-                  value: year,
-                  child: Text(year, style: const TextStyle(
-                    color: Color(0xFF0077B6),
-                    fontWeight: FontWeight.w600,
-                  )),
-                )).toList(),
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: Color(0xFF0077B6),
+                ),
+                items: years
+                    .map(
+                      (year) => DropdownMenuItem(
+                        value: year,
+                        child: Text(
+                          year,
+                          style: const TextStyle(
+                            color: Color(0xFF0077B6),
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
                 onChanged: (value) {
                   selectedYear = value!;
                   calculateTotals();
@@ -1042,14 +1123,23 @@ class HomePageState extends State<HomePage> {
               child: DropdownButton<String>(
                 value: selectedMonth,
                 isExpanded: true,
-                icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
-                items: List.generate(12, (i) => DropdownMenuItem(
-                  value: (i + 1).toString(),
-                  child: Text(monthNames[i], style: const TextStyle(
-                    color: Color(0xFF0077B6),
-                    fontWeight: FontWeight.w600,
-                  )),
-                )).toList(),
+                icon: const Icon(
+                  Icons.arrow_drop_down,
+                  color: Color(0xFF0077B6),
+                ),
+                items: List.generate(
+                  12,
+                  (i) => DropdownMenuItem(
+                    value: (i + 1).toString(),
+                    child: Text(
+                      monthNames[i],
+                      style: const TextStyle(
+                        color: Color(0xFF0077B6),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ).toList(),
                 onChanged: (value) {
                   selectedMonth = value!;
                   calculateTotals();
@@ -1066,18 +1156,43 @@ class HomePageState extends State<HomePage> {
   Widget _buildStatsRow(double balance) {
     return Row(
       children: [
-        _buildStatItem('Income', formatMMK(totalIncome), Colors.green[400]!, Icons.arrow_downward),
+        _buildStatItem(
+          'Income',
+          formatMMK(totalIncome),
+          Colors.green[400]!,
+          Icons.arrow_downward,
+        ),
         const SizedBox(width: 8),
-        _buildStatItem('Expense', formatMMK(totalExpense), Colors.red[400]!, Icons.arrow_upward),
+        _buildStatItem(
+          'Expense',
+          formatMMK(totalExpense),
+          Colors.red[400]!,
+          Icons.arrow_upward,
+        ),
         const SizedBox(width: 8),
-        _buildStatItem('Saved', formatMMK(totalSaved), Colors.blue[400]!, Icons.savings),
+        _buildStatItem(
+          'Saved',
+          formatMMK(totalSaved),
+          Colors.blue[400]!,
+          Icons.savings,
+        ),
         const SizedBox(width: 8),
-        _buildStatItem('Balance', formatMMK(balance), balance >= 0 ? Colors.green[400]! : Colors.red[400]!, Icons.account_balance),
+        _buildStatItem(
+          'Balance',
+          formatMMK(balance),
+          balance >= 0 ? Colors.green[400]! : Colors.red[400]!,
+          Icons.account_balance,
+        ),
       ],
     );
   }
 
-  Widget _buildStatItem(String label, String value, Color color, IconData icon) {
+  Widget _buildStatItem(
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -1096,16 +1211,50 @@ class HomePageState extends State<HomePage> {
           children: [
             Icon(icon, color: color, size: 20),
             const SizedBox(height: 8),
-            Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 10), textAlign: TextAlign.center),
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildPieChart(Map<String, double> categoryTotals) {
+  // Get weekly expense data for line chart
+  List<double> getWeeklyExpenses() {
+    List<double> weeklyData = List.filled(4, 0);
+    for (var item in data) {
+      try {
+        DateTime date = DateTime.parse(item['date'] ?? '');
+        if (date.month.toString() == selectedMonth &&
+            date.year.toString() == selectedYear) {
+          if (item['type'] == 'expense') {
+            double amt =
+                double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+            int week = (date.day - 1) ~/ 7;
+            if (week < 4) weeklyData[week] += amt;
+          }
+        }
+      } catch (_) {}
+    }
+    return weeklyData;
+  }
+
+  Widget _buildLineChart() {
+    List<double> weeklyData = getWeeklyExpenses();
+
     return Container(
       height: 200,
       padding: const EdgeInsets.all(16),
@@ -1120,48 +1269,106 @@ class HomePageState extends State<HomePage> {
           ),
         ],
       ),
-      child: categoryTotals.isEmpty
-          ? const Center(child: Text('No expenses', style: TextStyle(color: Color(0xFF0077B6))))
-          : Row(
-              children: [
-                Expanded(
-                  child: PieChart(
-                    PieChartData(
-                      sectionsSpace: 2,
-                      centerSpaceRadius: 30,
-                      sections: categoryTotals.entries.map((e) => PieChartSectionData(
-                        value: e.value,
-                        title: e.key,
-                        color: _getCategoryColor(e.key),
-                        radius: 40,
-                        titleStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white),
-                      )).toList(),
+      child: weeklyData.every((e) => e == 0)
+          ? const Center(
+              child: Text(
+                'No expenses',
+                style: TextStyle(color: Color(0xFF0077B6)),
+              ),
+            )
+          : BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceAround,
+                maxY: weeklyData.reduce((a, b) => a > b ? a : b) * 1.2,
+                barTouchData: BarTouchData(
+                  enabled: true,
+                  touchTooltipData: BarTouchTooltipData(
+                    tooltipBgColor: const Color(0xFF0077B6),
+                    getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                      return BarTooltipItem(
+                        '${formatMMK(rod.toY)}',
+                        const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  rightTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  topTitles: const AxisTitles(
+                    sideTitles: SideTitles(showTitles: false),
+                  ),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      getTitlesWidget: (value, meta) {
+                        const titles = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8),
+                          child: Text(
+                            titles[value.toInt()],
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 10,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  leftTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 50,
+                      getTitlesWidget: (value, meta) {
+                        return Text(
+                          '${value.toInt()}',
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 10,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: categoryTotals.entries.take(5).map((e) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: _getCategoryColor(e.key),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(e.key, style: const TextStyle(fontSize: 12)),
-                      ],
-                    ),
-                  )).toList(),
+                borderData: FlBorderData(show: false),
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  horizontalInterval:
+                      weeklyData.reduce((a, b) => a > b ? a : b) / 4,
+                  getDrawingHorizontalLine: (value) {
+                    return FlLine(color: Colors.grey[200]!, strokeWidth: 1);
+                  },
                 ),
-              ],
+                barGroups: weeklyData.asMap().entries.map((e) {
+                  return BarChartGroupData(
+                    x: e.key,
+                    barRods: [
+                      BarChartRodData(
+                        toY: e.value,
+                        color: const Color(0xFF0077B6),
+                        width: 20,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(6),
+                        ),
+                        backDrawRodData: BackgroundBarChartRodData(
+                          show: true,
+                          toY: weeklyData.reduce((a, b) => a > b ? a : b) * 1.2,
+                          color: Colors.grey[100]!,
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
             ),
     );
   }
@@ -1201,7 +1408,8 @@ class HomePageState extends State<HomePage> {
     bool isSave = item['type'] == 'save';
     String categoryText = item['category']?.toString() ?? '';
     String dateText = item['date']?.toString() ?? '';
-    double amountValue = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    double amountValue =
+        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
 
     Color iconColor;
     Color bgColor;
@@ -1285,4 +1493,3 @@ class HomePageState extends State<HomePage> {
     );
   }
 }
-

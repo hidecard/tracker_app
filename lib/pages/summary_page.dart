@@ -44,7 +44,11 @@ class SummaryPageState extends State<SummaryPage> {
       final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         List newData = jsonDecode(response.body);
-        newData.sort((a, b) => (b['date'] ?? '').toString().compareTo((a['date'] ?? '').toString()));
+        newData.sort(
+          (a, b) => (b['date'] ?? '').toString().compareTo(
+            (a['date'] ?? '').toString(),
+          ),
+        );
         if (!mounted) return;
         setState(() => data = newData);
         calculateTotals();
@@ -60,9 +64,11 @@ class SummaryPageState extends State<SummaryPage> {
     for (var item in filteredItems()) {
       try {
         if (item['type'] == 'income') {
-          totalIncome += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+          totalIncome +=
+              double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
         } else if (item['type'] == 'expense') {
-          totalExpense += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+          totalExpense +=
+              double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
         } else if (item['type'] == 'save') {
           totalSaved += double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
         }
@@ -78,16 +84,25 @@ class SummaryPageState extends State<SummaryPage> {
         DateTime d = DateTime.parse(item['date'] ?? '');
         bool dateMatch = false;
         if (mode == 'month') {
-          dateMatch = d.month.toString() == selectedMonth && d.year.toString() == selectedYear;
+          dateMatch =
+              d.month.toString() == selectedMonth &&
+              d.year.toString() == selectedYear;
         } else {
-          dateMatch = d.year == selectedDate.year && d.month == selectedDate.month && d.day == selectedDate.day;
+          dateMatch =
+              d.year == selectedDate.year &&
+              d.month == selectedDate.month &&
+              d.day == selectedDate.day;
         }
         if (!dateMatch) return false;
         if (q.isEmpty) return true;
         String cat = (item['category'] ?? '').toString().toLowerCase();
         String note = (item['note'] ?? '').toString().toLowerCase();
-        return cat.contains(q) || note.contains(q) || item['date'].toString().contains(q);
-      } catch (_) { return false; }
+        return cat.contains(q) ||
+            note.contains(q) ||
+            item['date'].toString().contains(q);
+      } catch (_) {
+        return false;
+      }
     }).toList();
   }
 
@@ -108,7 +123,10 @@ class SummaryPageState extends State<SummaryPage> {
   Widget build(BuildContext context) {
     double balance = totalIncome - totalExpense - totalSaved;
     int currentYear = DateTime.now().year;
-    List<String> years = List.generate(5, (index) => (currentYear - 2 + index).toString());
+    List<String> years = List.generate(
+      5,
+      (index) => (currentYear - 2 + index).toString(),
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F9FC),
@@ -119,31 +137,27 @@ class SummaryPageState extends State<SummaryPage> {
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
-                children: [
-                  _buildStatsRow(balance),
-                  const SizedBox(height: 16),
-                ],
+                children: [_buildStatsRow(balance), const SizedBox(height: 16)],
               ),
             ),
           ),
           if (isLoading)
             const SliverFillRemaining(
-              child: Center(child: CircularProgressIndicator(color: Color(0xFF0077B6))),
+              child: Center(
+                child: CircularProgressIndicator(color: Color(0xFF0077B6)),
+              ),
             )
           else
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               sliver: SliverList(
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    if (index >= filteredItems().length) return null;
-                    var item = filteredItems()[index];
-                    bool isIncome = item['type'] == 'income';
-                    bool isSave = item['type'] == 'save';
-                    return _buildTransactionItem(item, isIncome, isSave);
-                  },
-                  childCount: filteredItems().length,
-                ),
+                delegate: SliverChildBuilderDelegate((context, index) {
+                  if (index >= filteredItems().length) return null;
+                  var item = filteredItems()[index];
+                  bool isIncome = item['type'] == 'income';
+                  bool isSave = item['type'] == 'save';
+                  return _buildTransactionItem(item, isIncome, isSave);
+                }, childCount: filteredItems().length),
               ),
             ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
@@ -154,21 +168,75 @@ class SummaryPageState extends State<SummaryPage> {
 
   Widget _buildSliverAppBar(List<String> years) {
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 100,
       floating: false,
       pinned: true,
+      backgroundColor: const Color(0xFF0077B6),
+      elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
-        title: const Text('Summary', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        title: const Text(
+          'Summary',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
         background: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFF87CEEB), Color(0xFF0077B6)]),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF87CEEB), Color(0xFF0077B6)],
+            ),
+          ),
+          child: Stack(
+            children: [
+              Positioned(
+                right: -30,
+                top: -30,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -20,
+                bottom: 60,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Colors.white.withOpacity(0.1),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
       bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(140),
+        preferredSize: const Size.fromHeight(130),
         child: Container(
+          width: double.infinity,
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
           child: Column(
             children: [
               _buildSearchBar(),
@@ -187,7 +255,13 @@ class SummaryPageState extends State<SummaryPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -223,7 +297,8 @@ class SummaryPageState extends State<SummaryPage> {
   }
 
   Widget _buildModeButton(IconData icon, int index) {
-    bool isSelected = (mode == 'day' && index == 0) || (mode == 'month' && index == 1);
+    bool isSelected =
+        (mode == 'day' && index == 0) || (mode == 'month' && index == 1);
     return GestureDetector(
       onTap: () {
         setState(() => mode = index == 0 ? 'day' : 'month');
@@ -235,7 +310,11 @@ class SummaryPageState extends State<SummaryPage> {
           color: isSelected ? const Color(0xFF0077B6) : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
-        child: Icon(icon, size: 18, color: isSelected ? Colors.white : Colors.grey[600]),
+        child: Icon(
+          icon,
+          size: 18,
+          color: isSelected ? Colors.white : Colors.grey[600],
+        ),
       ),
     );
   }
@@ -252,13 +331,29 @@ class SummaryPageState extends State<SummaryPage> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.calendar_today, color: Color(0xFF0077B6), size: 18),
+                    const Icon(
+                      Icons.calendar_today,
+                      color: Color(0xFF0077B6),
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
-                    Text('${selectedDate.toString().substring(0, 10)}', style: const TextStyle(color: Color(0xFF0077B6), fontWeight: FontWeight.w500)),
+                    Text(
+                      '${selectedDate.toString().substring(0, 10)}',
+                      style: const TextStyle(
+                        color: Color(0xFF0077B6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -271,15 +366,40 @@ class SummaryPageState extends State<SummaryPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedYear,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
-                  items: years.map((y) => DropdownMenuItem(value: y, child: Text(y, style: const TextStyle(color: Color(0xFF0077B6), fontWeight: FontWeight.w600)))).toList(),
-                  onChanged: (v) => setState(() { selectedYear = v!; calculateTotals(); }),
+                  icon: const Icon(
+                    Icons.arrow_drop_down,
+                    color: Color(0xFF0077B6),
+                  ),
+                  items: years
+                      .map(
+                        (y) => DropdownMenuItem(
+                          value: y,
+                          child: Text(
+                            y,
+                            style: const TextStyle(
+                              color: Color(0xFF0077B6),
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) => setState(() {
+                    selectedYear = v!;
+                    calculateTotals();
+                  }),
                 ),
               ),
             ),
@@ -291,15 +411,39 @@ class SummaryPageState extends State<SummaryPage> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(12),
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: DropdownButtonHideUnderline(
                 child: DropdownButton<String>(
                   value: selectedMonth,
                   isExpanded: true,
-                  icon: const Icon(Icons.arrow_drop_down, color: Color(0xFF0077B6)),
-                  items: List.generate(12, (i) => DropdownMenuItem(value: (i + 1).toString(), child: Text('${i + 1}', style: const TextStyle(color: Color(0xFF0077B6), fontWeight: FontWeight.w600)))).toList(),
-                  onChanged: (v) => setState(() { selectedMonth = v!; calculateTotals(); }),
+                  icon: const Icon(
+                    Icons.arrow_drop_down,
+                    color: Color(0xFF0077B6),
+                  ),
+                  items: List.generate(
+                    12,
+                    (i) => DropdownMenuItem(
+                      value: (i + 1).toString(),
+                      child: Text(
+                        '${i + 1}',
+                        style: const TextStyle(
+                          color: Color(0xFF0077B6),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ).toList(),
+                  onChanged: (v) => setState(() {
+                    selectedMonth = v!;
+                    calculateTotals();
+                  }),
                 ),
               ),
             ),
@@ -318,7 +462,11 @@ class SummaryPageState extends State<SummaryPage> {
         const SizedBox(width: 8),
         _buildStatCard('Saved', formatMMK(totalSaved), Colors.blue[400]!),
         const SizedBox(width: 8),
-        _buildStatCard('Balance', formatMMK(balance), balance >= 0 ? Colors.green[400]! : Colors.red[400]!),
+        _buildStatCard(
+          'Balance',
+          formatMMK(balance),
+          balance >= 0 ? Colors.green[400]! : Colors.red[400]!,
+        ),
       ],
     );
   }
@@ -330,24 +478,55 @@ class SummaryPageState extends State<SummaryPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(12),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           children: [
-            Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 10), textAlign: TextAlign.center),
+            Text(
+              label,
+              style: TextStyle(color: Colors.grey[600], fontSize: 10),
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 4),
-            Text(value, style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 11), textAlign: TextAlign.center),
+            Text(
+              value,
+              style: TextStyle(
+                color: color,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+              textAlign: TextAlign.center,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildTransactionItem(Map<String, dynamic> item, bool isIncome, bool isSave) {
-    double amountValue = double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
-    Color iconColor = isSave ? Colors.blue : (isIncome ? Colors.green : Colors.red);
-    Color bgColor = isSave ? Colors.blue.withOpacity(0.1) : (isIncome ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1));
-    IconData icon = isSave ? Icons.savings : (isIncome ? Icons.arrow_downward : Icons.arrow_upward);
+  Widget _buildTransactionItem(
+    Map<String, dynamic> item,
+    bool isIncome,
+    bool isSave,
+  ) {
+    double amountValue =
+        double.tryParse(item['amount']?.toString() ?? '0') ?? 0;
+    Color iconColor = isSave
+        ? Colors.blue
+        : (isIncome ? Colors.green : Colors.red);
+    Color bgColor = isSave
+        ? Colors.blue.withOpacity(0.1)
+        : (isIncome
+              ? Colors.green.withOpacity(0.1)
+              : Colors.red.withOpacity(0.1));
+    IconData icon = isSave
+        ? Icons.savings
+        : (isIncome ? Icons.arrow_downward : Icons.arrow_upward);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -356,13 +535,22 @@ class SummaryPageState extends State<SummaryPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Icon(icon, color: iconColor, size: 22),
             ),
             const SizedBox(width: 16),
@@ -370,17 +558,33 @@ class SummaryPageState extends State<SummaryPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item['category'] ?? (isSave ? 'Save' : ''), style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF333333), fontSize: 15)),
+                  Text(
+                    item['category'] ?? (isSave ? 'Save' : ''),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF333333),
+                      fontSize: 15,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(item['date'] ?? '', style: TextStyle(color: Colors.grey[500], fontSize: 12)),
+                  Text(
+                    item['date'] ?? '',
+                    style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                  ),
                 ],
               ),
             ),
-            Text('${isIncome ? '+' : '-'}${formatMMK(amountValue)}', style: TextStyle(color: iconColor, fontWeight: FontWeight.bold, fontSize: 15)),
+            Text(
+              '${isIncome ? '+' : '-'}${formatMMK(amountValue)}',
+              style: TextStyle(
+                color: iconColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 15,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 }
-
