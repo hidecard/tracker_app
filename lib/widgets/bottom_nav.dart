@@ -16,9 +16,9 @@ class CustomBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: const Color(0xFF87CEEB).withOpacity(0.3),
@@ -28,7 +28,7 @@ class CustomBottomNav extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         child: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -47,29 +47,41 @@ class CustomBottomNav extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, Icons.home_outlined, Icons.home, 'Home'),
-                  _buildNavItem(
-                    1,
-                    Icons.receipt_long_outlined,
-                    Icons.receipt_long,
-                    'Transactions',
+                  Expanded(
+                    child: Center(
+                      child: _buildNavItem(0, Icons.home_outlined, Icons.home),
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: _buildNavItem(
+                        1,
+                        Icons.receipt_long_outlined,
+                        Icons.receipt_long,
+                      ),
+                    ),
                   ),
                   _buildCenterAddButton(),
-                  _buildNavItem(
-                    2,
-                    Icons.insert_chart_outlined,
-                    Icons.insert_chart,
-                    'Summary',
+                  Expanded(
+                    child: Center(
+                      child: _buildNavItem(
+                        2,
+                        Icons.insert_chart_outlined,
+                        Icons.insert_chart,
+                      ),
+                    ),
                   ),
-                  _buildNavItem(
-                    3,
-                    Icons.savings_outlined,
-                    Icons.savings,
-                    'Save',
+                  Expanded(
+                    child: Center(
+                      child: _buildNavItem(
+                        3,
+                        Icons.savings_outlined,
+                        Icons.savings,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -80,23 +92,18 @@ class CustomBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _buildNavItem(
-    int index,
-    IconData icon,
-    IconData activeIcon,
-    String label,
-  ) {
+  Widget _buildNavItem(int index, IconData icon, IconData activeIcon) {
     bool isSelected = currentIndex == index;
     return GestureDetector(
       onTap: () => onTap(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 250),
         padding: EdgeInsets.symmetric(
-          horizontal: isSelected ? 20 : 12,
-          vertical: 10,
+          horizontal: isSelected ? 4 : 4,
+          vertical: isSelected ? 2 : 4,
         ),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           color: isSelected
               ? const Color(0xFF87CEEB).withOpacity(0.2)
               : Colors.transparent,
@@ -113,26 +120,10 @@ class CustomBottomNav extends StatelessWidget {
               ? Border.all(color: Colors.white.withOpacity(0.5), width: 1)
               : null,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? const Color(0xFF0077B6) : Colors.grey[600],
-              size: isSelected ? 28 : 24,
-            ),
-            if (isSelected) ...[
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  color: Color(0xFF0077B6),
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ],
+        child: Icon(
+          isSelected ? activeIcon : icon,
+          color: isSelected ? const Color(0xFF0077B6) : Colors.grey[600],
+          size: isSelected ? 24 : 22,
         ),
       ),
     );
@@ -142,8 +133,8 @@ class CustomBottomNav extends StatelessWidget {
     return GestureDetector(
       onTap: onAddPressed,
       child: Container(
-        width: 56,
-        height: 56,
+        width: 40,
+        height: 40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: const LinearGradient(
@@ -154,13 +145,13 @@ class CustomBottomNav extends StatelessWidget {
           boxShadow: [
             BoxShadow(
               color: const Color(0xFF0077B6).withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: const Center(
-          child: Icon(Icons.add, color: Colors.white, size: 28),
+          child: Icon(Icons.add, color: Colors.white, size: 20),
         ),
       ),
     );
@@ -199,21 +190,18 @@ class SimpleBottomNav extends StatelessWidget {
         backgroundColor: Colors.transparent,
         elevation: 0,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home_outlined), label: ''),
           BottomNavigationBarItem(
             icon: Icon(Icons.receipt_long_outlined),
-            label: 'Transactions',
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.insert_chart_outlined),
-            label: 'Summary',
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.savings_outlined),
-            label: 'Save',
+            label: '',
           ),
         ],
       ),

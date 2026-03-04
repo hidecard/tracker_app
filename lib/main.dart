@@ -190,25 +190,25 @@ class MainScreenState extends State<MainScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  _buildNavItem(0, Icons.home_outlined, Icons.home, 'home'),
+                  _buildNavItem(0, Icons.home_outlined, Icons.home, ''),
                   _buildNavItem(
                     1,
                     Icons.receipt_long_outlined,
                     Icons.receipt_long,
-                    'transactions',
+                    '',
                   ),
                   _buildCenterAddButton(context),
                   _buildNavItem(
                     2,
                     Icons.insert_chart_outlined,
                     Icons.insert_chart,
-                    'summary',
+                    '',
                   ),
                   _buildNavItem(
                     3,
                     Icons.savings_outlined,
                     Icons.savings,
-                    'save',
+                    '',
                   ),
                 ],
               ),
